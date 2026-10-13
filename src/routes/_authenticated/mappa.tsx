@@ -18,6 +18,21 @@ import portaPortelloAudio from "@/assets/porta-portello.wav.asset.json";
 
 const MapView = lazy(() => import("@/components/game/MapView"));
 
+const MAX_GPS_TOLERANCE_M = 50;
+
+function geolocationErrorMessage(err: GeolocationPositionError): string {
+  switch (err.code) {
+    case err.PERMISSION_DENIED:
+      return "Permesso di posizione negato: abilitalo nelle impostazioni del browser per sbloccare le tappe.";
+    case err.POSITION_UNAVAILABLE:
+      return "Posizione non disponibile: controlla che il GPS sia attivo e riprova.";
+    case err.TIMEOUT:
+      return "Il GPS non ha risposto in tempo: riprova all'aperto, lontano da portici ed edifici alti.";
+    default:
+      return `Impossibile ottenere la posizione: ${err.message}`;
+  }
+}
+
 function getDemoToken(): string | undefined {
   try {
     return sessionStorage.getItem("pce-demo-token") ?? undefined;
@@ -36,7 +51,9 @@ type ChatMsg = { role: "user" | "assistant"; content: string };
 function MapPage() {
   const { progress, completePoi } = useActiveProgress();
   const { demoActive, enterDemo, exitDemo, setDemoProgress, onBadgeUnlock } = useDemoMode();
-  const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [userPos, setUserPos] = useState<{ lat: number; lng: number; accuracy?: number } | null>(
+    null,
+  );
   const [activePoiId, setActivePoiId] = useState<number | null>(null);
   const [recenterKey, setRecenterKey] = useState(0);
   const [tracking, setTracking] = useState(false);
@@ -55,8 +72,13 @@ function MapPage() {
       ? haversineMeters(userPos.lat, userPos.lng, activePoi.latitude, activePoi.longitude)
       : null;
 
+  // Il GPS dello smartphone in centro storico sbaglia spesso di 20-50 m: si concede
+  // all'utente il margine dichiarato dal dispositivo, fino a un massimo di 50 m.
+  const tolerance = Math.min(userPos?.accuracy ?? 0, MAX_GPS_TOLERANCE_M);
   const inRange =
-    distance != null && activePoi != null && distance <= activePoi.geofence_radius_m;
+    distance != null &&
+    activePoi != null &&
+    distance - tolerance <= activePoi.geofence_radius_m;
 
   const refreshLocation = () => {
     if (!navigator.geolocation) {
@@ -64,18 +86,38 @@ function MapPage() {
       return;
     }
     setTracking(true);
+    const onSuccess = (pos: GeolocationPosition) => {
+      const accuracy = Math.round(pos.coords.accuracy);
+      setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy });
+      setRecenterKey((k) => k + 1);
+      setTracking(false);
+      toast.success("Posizione aggiornata", {
+        description:
+          accuracy > MAX_GPS_TOLERANCE_M
+            ? `Segnale debole (precisione ±${accuracy} m): se puoi, spostati in uno spazio aperto e riprova.`
+            : `Precisione ±${accuracy} m`,
+      });
+    };
+    const onError = (err: GeolocationPositionError) => {
+      setTracking(false);
+      toast.error(geolocationErrorMessage(err));
+    };
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setRecenterKey((k) => k + 1);
-        setTracking(false);
-        toast.success("Posizione aggiornata");
-      },
+      onSuccess,
       (err) => {
-        setTracking(false);
-        toast.error(`Impossibile ottenere la posizione: ${err.message}`);
+        // In città il fix ad alta precisione può richiedere molto tempo:
+        // in caso di timeout si riprova con la posizione di rete.
+        if (err.code === err.TIMEOUT) {
+          navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+            enableHighAccuracy: false,
+            timeout: 10000,
+            maximumAge: 60000,
+          });
+          return;
+        }
+        onError(err);
       },
-      { enableHighAccuracy: true, timeout: 10000 },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 15000 },
     );
   };
 
@@ -139,7 +181,14 @@ function MapPage() {
     if (currentVisited.includes(poi.id)) return;
     const nextVisited = [...currentVisited, poi.id];
     const newBadges = computeNewBadges(progress.badges_earned, nextVisited);
-    await completePoi(poi.id, 0, newBadges);
+    try {
+      await completePoi(poi.id, poi.reward_xp, newBadges);
+    } catch (e) {
+      toast.error("Sfida superata, ma non sono riuscito a salvare il progresso.", {
+        description: e instanceof Error ? e.message : "Controlla la connessione e riprova.",
+      });
+      return;
+    }
     toast.success(`${poi.name} sbloccato!`, {
       description: newBadges.length ? `Badge sbloccato: ${newBadges.join(", ")}` : undefined,
     });
@@ -457,7 +506,7 @@ function ChallengePanel({
     setBusy(true);
     setFeedback(null);
     try {
-      const dataUrl = await fileToDataUrl(file);
+      const dataUrl = await compressImage(file);
       const res = await photoFn({ data: { poiId: poi.id, imageDataUrl: dataUrl, demoToken: getDemoToken() } });
       setFeedback(res.feedback);
       if (res.valid) onSuccess();
@@ -512,7 +561,9 @@ function ChallengePanel({
                   setBusy(true);
                   setFeedback(null);
                   try {
-                    const res = await triviaFn({ data: { poiId: poi.id, answer: c.key } });
+                    const res = await triviaFn({
+                      data: { poiId: poi.id, answer: c.key, demoToken: getDemoToken() },
+                    });
                     setFeedback(res.feedback);
                     if (res.valid) onSuccess();
                   } catch (e) {
@@ -786,6 +837,25 @@ function MentorChat({ poi }: { poi: Poi }) {
       </div>
     </Card>
   );
+}
+
+// Le foto degli smartphone pesano spesso 3-10 MB: si ridimensionano a 1280 px
+// prima dell'invio, così il caricamento è rapido anche con poca rete.
+async function compressImage(file: File, maxSide = 1280, quality = 0.8): Promise<string> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("canvas non disponibile");
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    return canvas.toDataURL("image/jpeg", quality);
+  } catch {
+    return fileToDataUrl(file);
+  }
 }
 
 function fileToDataUrl(file: File): Promise<string> {

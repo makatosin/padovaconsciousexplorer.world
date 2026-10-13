@@ -68,15 +68,20 @@ async function assertAuthorized(demoToken?: string): Promise<void> {
   throw new Error("Unauthorized");
 }
 
-const ChatInput = z.object({
-  poiId: z.number(),
-  history: z.array(
+// Limiti alla conversazione: evitano richieste enormi (e costose) verso il modello.
+const ChatHistory = z
+  .array(
     z.object({
       role: z.enum(["user", "assistant"]),
-      content: z.string(),
+      content: z.string().max(4000),
     }),
-  ),
-  userMessage: z.string(),
+  )
+  .transform((h) => h.slice(-20));
+
+const ChatInput = z.object({
+  poiId: z.number(),
+  history: ChatHistory,
+  userMessage: z.string().min(1).max(2000),
   demoToken: z.string().optional(),
 });
 
@@ -133,12 +138,7 @@ export const chatWithMentor = createServerFn({ method: "POST" })
   });
 
 const GeneralChatInput = z.object({
-  history: z.array(
-    z.object({
-      role: z.enum(["user", "assistant"]),
-      content: z.string(),
-    }),
-  ),
+  history: ChatHistory,
   userMessage: z.string().min(1).max(2000),
   demoToken: z.string().optional(),
 });
@@ -174,6 +174,21 @@ export const validateTrivia = createServerFn({ method: "POST" })
     const poi = POIS.find((p) => p.id === data.poiId);
     if (!poi || poi.challenge_type !== "TRIVIA") {
       throw new Error("Sfida trivia non disponibile");
+    }
+
+    // Risposte a scelta multipla o con testo esatto: confronto diretto, senza IA.
+    // È immediato, gratuito e non può essere aggirato scrivendo istruzioni nella risposta.
+    const expected = normalizeAnswer(poi.expected_answer_or_validation);
+    const given = normalizeAnswer(data.answer);
+    if (given === expected) {
+      return { valid: true, feedback: "Risposta corretta! 🎉", reward_xp: poi.reward_xp };
+    }
+    if (poi.choices || poi.ordering) {
+      return {
+        valid: false,
+        feedback: "Non è la risposta giusta. Riprova!",
+        reward_xp: poi.reward_xp,
+      };
     }
 
     const prompt = `Sei un validatore per una caccia al tesoro urbana a Padova.
@@ -243,6 +258,15 @@ Analizza l'immagine allegata e stabilisci se soddisfa il criterio. Rispondi SOLO
       reward_xp: poi.reward_xp,
     };
   });
+
+function normalizeAnswer(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, " ")
+    .trim()
+    .toUpperCase();
+}
 
 function extractJson(text: string): { valid?: boolean; feedback?: string } | null {
   try {
