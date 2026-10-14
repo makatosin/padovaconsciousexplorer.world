@@ -166,10 +166,10 @@ export const MISSIONS: Mission[] = [
     title: "Padova verde",
     emoji: "🌳",
     description:
-      "Tre polmoni verdi lontani dalla folla, dal giardino romantico al grande parco di quartiere.",
-    poiIds: [3, 2, 5],
+      "Due polmoni verdi lontani dalla folla, dal giardino romantico al grande parco di quartiere.",
+    poiIds: [3, 5],
     finale:
-      "Dal giardino all'inglese di Jappelli alle terrazze della Rotonda fino ai quasi 40.000 m² dell'Arcella: hai visto come il verde rende la città più fresca e vivibile, anche lontano dal centro.",
+      "Dal giardino all'inglese di Jappelli ai quasi 40.000 m² dell'Arcella: hai visto come il verde rende la città più fresca e vivibile, anche lontano dal centro.",
   },
 ];
 
