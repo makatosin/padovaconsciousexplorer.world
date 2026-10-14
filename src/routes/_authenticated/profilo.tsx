@@ -483,7 +483,7 @@ function ProfilePage() {
         </div>
       )}
       <p className="px-4 pt-4 pb-2 text-center text-[10px] text-muted-foreground">
-        Versione 1.2 · 14/10/2026 · missioni tematiche
+        Versione 1.3 · 14/10/2026 · Padova verde con due parchi
       </p>
       </>
       )}
