@@ -124,6 +124,59 @@ export const POIS: Poi[] = [
   },
 ];
 
+// Missioni tematiche (par. 2.4.3 della tesi): fili narrativi che collegano luoghi
+// dispersi. Completare tutte le tappe di una missione sblocca il racconto finale
+// e un badge dedicato.
+export type Mission = {
+  id: string;
+  title: string;
+  emoji: string;
+  badgeTitle: string;
+  description: string;
+  poiIds: number[];
+  finale: string;
+};
+
+export const MISSIONS: Mission[] = [
+  {
+    id: "acqua",
+    badgeTitle: "Custode dell'Acqua",
+    title: "Padova d'acqua",
+    emoji: "💧",
+    description:
+      "Segui l'acqua che ha fatto la storia della città: il porto fluviale verso Venezia e il grande serbatoio che dal 1925 la disseta.",
+    poiIds: [4, 2],
+    finale:
+      "Hai unito i due volti dell'acqua padovana: il Piovego, che per secoli ha portato burchielli, merci e viaggiatori verso la Laguna, e la Rotonda, il serbatoio che nel Novecento ha portato l'acqua nelle case. La città è cresciuta attorno all'acqua, anche dove oggi non la vedi.",
+  },
+  {
+    id: "mura",
+    badgeTitle: "Sentinella delle Mura",
+    title: "Padova fortificata",
+    emoji: "🏰",
+    description:
+      "Dalla torre di Ezzelino ai bastioni del Cinquecento: scopri come la città si difendeva.",
+    poiIds: [1, 2, 3],
+    finale:
+      "Torlonga, Bastione della Gatta, mura lungo il Parco Treves: hai attraversato secoli di difese. Oggi quegli stessi luoghi ospitano un museo dell'astronomia, giardini a terrazze e un parco romantico: la città fortificata è diventata la città da esplorare.",
+  },
+  {
+    id: "verde",
+    badgeTitle: "Anima Verde",
+    title: "Padova verde",
+    emoji: "🌳",
+    description:
+      "Tre polmoni verdi lontani dalla folla, dal giardino romantico al grande parco di quartiere.",
+    poiIds: [3, 2, 5],
+    finale:
+      "Dal giardino all'inglese di Jappelli alle terrazze della Rotonda fino ai quasi 40.000 m² dell'Arcella: hai visto come il verde rende la città più fresca e vivibile, anche lontano dal centro.",
+  },
+];
+
+export function missionsForPoi(poiId: number): Mission[] {
+  return MISSIONS.filter((m) => m.poiIds.includes(poiId));
+}
+
 export const BADGES: Badge[] = [
   {
     id: "first-step",
@@ -143,6 +196,12 @@ export const BADGES: Badge[] = [
     description: "Completa tutte e cinque le tappe del percorso.",
     unlock: (v) => v.length >= 5,
   },
+  ...MISSIONS.map((m) => ({
+    id: `mission-${m.id}`,
+    title: m.badgeTitle,
+    description: `Completa la missione ${m.title}.`,
+    unlock: (v: number[]) => m.poiIds.every((id) => v.includes(id)),
+  })),
 ];
 
 export function haversineMeters(

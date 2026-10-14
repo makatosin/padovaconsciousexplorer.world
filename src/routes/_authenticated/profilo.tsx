@@ -19,7 +19,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Trophy, Sparkles, MapPin, CheckCircle2, Circle, RotateCcw, Pencil, Check, X, Loader2 } from "lucide-react";
 import { LogIn } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { POIS, BADGES } from "@/lib/pois";
+import { POIS, BADGES, MISSIONS } from "@/lib/pois";
 import { useActiveProgress as useProgress, useDemoMode } from "@/lib/demo-mode";
 import { getMyProfile, updateMyProfile, checkNicknameAvailable } from "@/lib/progress.functions";
 import { AVATARS, getAvatar } from "@/lib/avatars";
@@ -363,6 +363,55 @@ function ProfilePage() {
             );
           })}
         </div>
+      </section>
+
+      {/* Missioni tematiche */}
+      <section className="px-4 pb-5">
+        <h2 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <MapPin className="size-3.5" /> Missioni
+        </h2>
+        <ul className="space-y-2">
+          {MISSIONS.map((m) => {
+            const done = m.poiIds.filter((id) => progress.visited_places.includes(id)).length;
+            const complete = done === m.poiIds.length;
+            return (
+              <li key={m.id}>
+                <Card className={`p-3 ${complete ? "border-primary/50 bg-primary/5" : ""}`}>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-sm font-semibold">
+                      {m.emoji} {m.title}
+                    </span>
+                    <span className="text-[11px] font-medium text-muted-foreground">
+                      {done}/{m.poiIds.length}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+                    {complete ? m.finale : m.description}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {m.poiIds.map((id) => {
+                      const poi = POIS.find((p) => p.id === id);
+                      const visitedPoi = progress.visited_places.includes(id);
+                      return (
+                        <span
+                          key={id}
+                          className={`rounded-full px-2 py-0.5 text-[10px] ${
+                            visitedPoi
+                              ? "bg-primary/15 text-primary"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {visitedPoi ? "✓ " : ""}
+                          {poi?.name}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </Card>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       {/* Visited */}

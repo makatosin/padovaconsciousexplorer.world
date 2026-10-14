@@ -10,7 +10,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from 
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { MapPin, Locate, Sparkles, Camera, Send, FlaskConical, MessageCircle, Zap, Award, RefreshCw, Footprints, Headphones, Play, Pause, Check, ArrowUp, ArrowDown } from "lucide-react";
-import { POIS, BADGES, haversineMeters, type Poi } from "@/lib/pois";
+import { POIS, BADGES, haversineMeters, missionsForPoi, type Poi } from "@/lib/pois";
 import { useActiveProgress, useDemoMode, computeNewBadges } from "@/lib/demo-mode";
 import { chatWithMentor, validateTrivia, validatePhoto } from "@/lib/game.functions";
 import { MentorChatDialog } from "@/components/game/MentorChatDialog";
@@ -456,6 +456,16 @@ function PoiSheet({
         </SheetHeader>
 
         <div className="space-y-4 p-4">
+          <div className="flex flex-wrap gap-1.5">
+            {missionsForPoi(poi.id).map((m) => (
+              <span
+                key={m.id}
+                className="rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-medium text-accent"
+              >
+                {m.emoji} Missione {m.title}
+              </span>
+            ))}
+          </div>
           <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/90">
             {poi.bot_context}
           </p>
