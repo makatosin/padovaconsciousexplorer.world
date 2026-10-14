@@ -85,22 +85,34 @@ const ChatInput = z.object({
   demoToken: z.string().optional(),
 });
 
+const AI_UNAVAILABLE = "Il servizio di intelligenza artificiale non risponde. Riprova tra poco.";
+
 async function callGateway(body: unknown): Promise<string> {
   const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("LOVABLE_API_KEY missing");
-  const res = await fetch(GATEWAY_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify(body),
-  });
+  if (!key) {
+    console.error("LOVABLE_API_KEY missing");
+    throw new Error(AI_UNAVAILABLE);
+  }
+  let res: Response;
+  try {
+    res = await fetch(GATEWAY_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    console.error("AI gateway unreachable", e);
+    throw new Error(AI_UNAVAILABLE);
+  }
   if (!res.ok) {
     const text = await res.text();
     if (res.status === 429) throw new Error("Troppe richieste. Riprova tra poco.");
     if (res.status === 402) throw new Error("Crediti AI esauriti. Contatta l'amministratore.");
-    throw new Error(`AI gateway error ${res.status}: ${text}`);
+    console.error(`AI gateway error ${res.status}: ${text}`);
+    throw new Error(AI_UNAVAILABLE);
   }
   const json = (await res.json()) as {
     choices?: { message?: { content?: string } }[];
