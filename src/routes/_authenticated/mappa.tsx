@@ -111,13 +111,13 @@ function MapPage() {
           navigator.geolocation.getCurrentPosition(onSuccess, onError, {
             enableHighAccuracy: false,
             timeout: 10000,
-            maximumAge: 60000,
+            maximumAge: 10000,
           });
           return;
         }
         onError(err);
       },
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 15000 },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 },
     );
   };
 
@@ -190,7 +190,9 @@ function MapPage() {
       return;
     }
     toast.success(`${poi.name} sbloccato!`, {
-      description: newBadges.length ? `Badge sbloccato: ${newBadges.join(", ")}` : undefined,
+      description: newBadges.length
+        ? `Badge sbloccato: ${newBadges.map((id) => BADGES.find((b) => b.id === id)?.title ?? id).join(", ")}`
+        : undefined,
     });
   };
 
@@ -707,6 +709,7 @@ function OrderingChallenge({
 function AudioChallenge({ poi, onComplete }: { poi: Poi; onComplete: () => void }) {
   const [playing, setPlaying] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -717,6 +720,12 @@ function AudioChallenge({ poi, onComplete }: { poi: Poi; onComplete: () => void 
       setFinished(true);
     });
     audio.addEventListener("pause", () => setPlaying(false));
+    // Se la traccia non si carica (rete assente o file non raggiungibile),
+    // la tappa non deve restare bloccata: si sblocca la conferma.
+    audio.addEventListener("error", () => {
+      setPlaying(false);
+      setLoadError(true);
+    });
     audio.addEventListener("play", () => setPlaying(true));
     audioRef.current = audio;
     return () => {
@@ -748,12 +757,23 @@ function AudioChallenge({ poi, onComplete }: { poi: Poi; onComplete: () => void 
           </>
         )}
       </Button>
+      {loadError && (
+        <p className="text-xs text-muted-foreground">
+          Non riesco a caricare la traccia audio. Leggi il testo qui sotto e conferma quando hai
+          finito.
+        </p>
+      )}
+      {loadError && poi.audio_narration && (
+        <p className="rounded-lg bg-background/60 p-3 text-sm italic leading-relaxed">
+          {poi.audio_narration}
+        </p>
+      )}
       <Button
         onClick={() => {
           audioRef.current?.pause();
           onComplete();
         }}
-        disabled={!finished}
+        disabled={!finished && !loadError}
         className="w-full"
       >
         <Check className="mr-2 size-4" />
