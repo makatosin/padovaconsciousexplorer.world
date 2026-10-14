@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { chatWithMentorGeneral } from "@/lib/game.functions";
+import { getDemoToken } from "@/lib/demo-token";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -40,10 +41,7 @@ export function MentorChatDialog({
     setInput("");
     setBusy(true);
     try {
-      let demoToken: string | undefined;
-      try {
-        demoToken = sessionStorage.getItem("pce-demo-token") ?? undefined;
-      } catch {}
+      const demoToken = getDemoToken();
       const res = await chatFn({ data: { history: messages, userMessage: text, demoToken } });
       setMessages([...next, { role: "assistant", content: res.reply }]);
     } catch (e) {
