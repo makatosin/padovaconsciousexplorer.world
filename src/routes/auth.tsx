@@ -12,6 +12,7 @@ import { AVATARS } from "@/lib/avatars";
 import { z } from "zod";
 import { checkNicknameAvailable } from "@/lib/progress.functions";
 import { verifyDemoPassword } from "@/lib/demo-auth.functions";
+import { setDemoToken } from "@/lib/demo-token";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertCircle } from "lucide-react";
 
@@ -44,6 +45,7 @@ function AuthPage() {
   const [demoPw, setDemoPw] = useState("");
   const [demoBusy, setDemoBusy] = useState(false);
   const [demoError, setDemoError] = useState<string | null>(null);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   const startDemo = () => {
     setDemoError(null);
@@ -67,8 +69,8 @@ function AuthPage() {
       }
       try {
         sessionStorage.setItem("pce-demo", "1");
-        if (demoToken) sessionStorage.setItem("pce-demo-token", demoToken);
       } catch {}
+      if (demoToken) setDemoToken(demoToken);
       setDemoOpen(false);
       navigate({ to: "/mappa", replace: true });
     } catch {
@@ -119,7 +121,7 @@ function AuthPage() {
           setBusy(false);
           return;
         }
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email: parsed.data.email,
           password: parsed.data.password,
           options: {
@@ -132,6 +134,12 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+        if (!signUpData.session) {
+          setPendingEmail(parsed.data.email);
+          toast.success("Account creato! Controlla la tua email per confermarlo.");
+          setBusy(false);
+          return;
+        }
         toast.success("Account creato! Benvenuto.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -162,6 +170,16 @@ function AuthPage() {
             {mode === "login" ? "Accedi al tuo viaggio" : "Crea il tuo account"}
           </p>
         </div>
+
+        {pendingEmail && (
+          <div className="mb-4 rounded-xl border border-primary/30 bg-primary/10 p-3 text-[13px] leading-snug">
+            <p className="font-semibold">Conferma la tua email</p>
+            <p className="mt-1 text-muted-foreground">
+              Ti abbiamo inviato un link a <span className="font-medium">{pendingEmail}</span>. Aprilo
+              per attivare l'account, poi torna qui e accedi.
+            </p>
+          </div>
+        )}
 
         <Card className="p-5">
           <form onSubmit={submit} className="space-y-4">

@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { toast } from "sonner";
 import { BADGES } from "./pois";
 import { useProgress, type Progress } from "./use-progress";
+import { clearDemoToken } from "./demo-token";
 
 type DemoProgress = Progress;
 
@@ -49,8 +50,8 @@ export function DemoModeProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       try {
         sessionStorage.removeItem("pce-demo");
-        sessionStorage.removeItem("pce-demo-token");
       } catch {}
+      clearDemoToken();
     }
     toast.info("Uscito dalla modalità demo");
   }, []);

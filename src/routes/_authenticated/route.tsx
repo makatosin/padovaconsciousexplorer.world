@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { DemoModeProvider, useDemoMode } from "@/lib/demo-mode";
 import { BadgeUnlockOverlay } from "@/components/game/BadgeUnlockOverlay";
 import { checkDemoSession, clearDemoSession } from "@/lib/demo-auth.functions";
+import { getDemoToken, clearDemoToken } from "@/lib/demo-token";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -14,10 +15,7 @@ export const Route = createFileRoute("/_authenticated")({
     if (!error && data.user) return { user: data.user };
     // No Supabase session — allow only if the server-verified demo cookie is present.
     try {
-      let demoToken: string | undefined;
-      try {
-        demoToken = sessionStorage.getItem("pce-demo-token") ?? undefined;
-      } catch {}
+      const demoToken = getDemoToken();
       const { ok } = await checkDemoSession({ data: { demoToken } });
       if (ok) {
         try {
@@ -30,8 +28,8 @@ export const Route = createFileRoute("/_authenticated")({
     try {
       hadDemoFlag = sessionStorage.getItem("pce-demo") === "1";
       sessionStorage.removeItem("pce-demo");
-      sessionStorage.removeItem("pce-demo-token");
     } catch {}
+    clearDemoToken();
     throw redirect({
       to: "/auth",
       search: hadDemoFlag ? { reason: "demo-expired" } : {},
@@ -59,9 +57,7 @@ function AuthedLayoutInner() {
       try {
         await clearDemoSession();
       } catch {}
-      try {
-        sessionStorage.removeItem("pce-demo-token");
-      } catch {}
+      clearDemoToken();
       exitDemo();
       navigate({ to: "/auth", replace: true });
       return;
@@ -83,15 +79,15 @@ function AuthedLayoutInner() {
         </div>
 
         {/* Bottom tab bar */}
-        <nav className="relative z-[600] flex items-stretch border-t border-border/60 bg-card/95 backdrop-blur">
-          <TabLink to="/mappa" active={isMap} icon={<Map className="size-5" />} label="Mappa" />
-          <TabLink to="/profilo" active={isProfile} icon={<User className="size-5" />} label="Profilo" />
+        <nav className="relative z-[600] flex min-h-[72px] items-stretch border-t border-border/60 bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+          <TabLink to="/mappa" active={isMap} icon={<Map className="size-6" />} label="Mappa" />
+          <TabLink to="/profilo" active={isProfile} icon={<User className="size-6" />} label="Profilo" />
           <button
             onClick={signOut}
-            className="relative flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium text-muted-foreground transition hover:text-foreground"
+            className="relative flex flex-1 flex-col items-center justify-center gap-1 py-4 text-[12px] font-medium text-muted-foreground transition hover:text-foreground active:bg-muted/60"
             aria-label={demoActive ? "Esci dalla demo" : "Esci"}
           >
-            <LogOut className="size-5" />
+            <LogOut className="size-6" />
             <span>{demoActive ? "Esci demo" : "Esci"}</span>
           </button>
         </nav>
@@ -114,7 +110,7 @@ function TabLink({
   return (
     <Link
       to={to}
-      className={`relative flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium transition ${
+      className={`relative flex flex-1 flex-col items-center justify-center gap-1 py-4 text-[12px] font-medium transition active:bg-muted/60 ${
         active ? "text-primary" : "text-muted-foreground hover:text-foreground"
       }`}
     >
