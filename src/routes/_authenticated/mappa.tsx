@@ -14,6 +14,7 @@ import { POIS, BADGES, haversineMeters, type Poi } from "@/lib/pois";
 import { useActiveProgress, useDemoMode, computeNewBadges } from "@/lib/demo-mode";
 import { chatWithMentor, validateTrivia, validatePhoto } from "@/lib/game.functions";
 import { MentorChatDialog } from "@/components/game/MentorChatDialog";
+import { AboutDialog, useAboutDialog } from "@/components/game/AboutDialog";
 import portaPortelloAudio from "@/assets/porta-portello.wav.asset.json";
 
 const MapView = lazy(() => import("@/components/game/MapView"));
@@ -60,6 +61,7 @@ function MapPage() {
   const [walkerPos, setWalkerPos] = useState<{ lat: number; lng: number } | null>(null);
   const [mentorOpen, setMentorOpen] = useState(false);
   const [sandboxOpen, setSandboxOpen] = useState(false);
+  const about = useAboutDialog();
   const walkTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const activePoi = useMemo(
@@ -266,6 +268,12 @@ function MapPage() {
           <div className="mt-1.5 border-t border-border/60 pt-1.5 px-1 text-[9px] text-muted-foreground">
             🔒 Tracciamento off. Tocca 📍 per aggiornare.
           </div>
+          <button
+            onClick={about.show}
+            className="mt-1 w-full rounded-md px-1 py-1 text-left text-[10px] font-medium text-accent hover:bg-muted"
+          >
+            ℹ️ Perché queste tappe?
+          </button>
         </Card>
       </aside>
 
@@ -325,6 +333,7 @@ function MapPage() {
       </div>
 
       <MentorChatDialog open={mentorOpen} onOpenChange={setMentorOpen} />
+      <AboutDialog open={about.open} onOpenChange={about.onOpenChange} />
 
       <PoiSheet
         poi={activePoi}
