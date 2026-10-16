@@ -93,8 +93,17 @@ function MapPage() {
 
   // Posizione sempre attiva mentre la mappa è aperta (non in modalità demo, dove ci si
   // sposta con il teletrasporto). La posizione resta sul telefono e non viene salvata.
+  // Al primo accesso parte solo dopo la schermata "Perché queste tappe?", così il
+  // permesso viene chiesto dopo averne spiegato il motivo.
+  const locationAllowed = about.checked && !about.open;
+  const [locationStarted, setLocationStarted] = useState(false);
   useEffect(() => {
-    if (demoActive || typeof navigator === "undefined" || !navigator.geolocation) return;
+    if (locationAllowed) setLocationStarted(true);
+  }, [locationAllowed]);
+
+  useEffect(() => {
+    if (!locationStarted || demoActive || typeof navigator === "undefined" || !navigator.geolocation)
+      return;
     const id = navigator.geolocation.watchPosition(
       (pos) => {
         setGpsDenied(false);
@@ -114,7 +123,31 @@ function MapPage() {
       { enableHighAccuracy: true, maximumAge: 10000, timeout: 30000 },
     );
     return () => navigator.geolocation.clearWatch(id);
-  }, [demoActive]);
+  }, [demoActive, locationStarted]);
+
+  // Tocco su "Consenti la posizione e iniziamo": il permesso viene chiesto subito e una
+  // prima posizione, anche approssimativa, basta per consigliare la missione più vicina.
+  const requestLocationNow = () => {
+    setLocationStarted(true);
+    if (demoActive || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGpsDenied(false);
+        setUserPos(
+          (prev) =>
+            prev ?? {
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              accuracy: Math.round(pos.coords.accuracy),
+            },
+        );
+      },
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) setGpsDenied(true);
+      },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 },
+    );
+  };
 
   // Avviso quando si entra nel raggio di una tappa non ancora completata (una volta per
   // tappa a ogni apertura dell'app): messaggio nell'app, vibrazione e, se l'app è in
@@ -452,12 +485,22 @@ function MapPage() {
       </div>
 
       <MentorChatDialog open={mentorOpen} onOpenChange={setMentorOpen} />
-      <AboutDialog open={about.open} onOpenChange={about.onOpenChange} />
+      <AboutDialog open={about.open} onOpenChange={about.onOpenChange} onStart={requestLocationNow} />
       <MissionPickerDialog
         open={missionPicker.open && !about.open}
         onOpenChange={missionPicker.onOpenChange}
         currentId={missionPicker.missionId}
         onChoose={(m) => chooseMission(m.id)}
+        visited={progress.visited_places}
+        location={
+          userPos
+            ? { state: "ok", lat: userPos.lat, lng: userPos.lng }
+            : demoActive
+              ? { state: "none" }
+              : gpsDenied
+                ? { state: "denied" }
+                : { state: "searching" }
+        }
       />
 
       <PoiSheet
