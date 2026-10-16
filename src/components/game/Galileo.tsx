@@ -1,22 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
 import { Lightbulb, X } from "lucide-react";
 import type { Poi } from "@/lib/pois";
+import { GalileoAvatar } from "./GalileoAvatar";
 
 export const GALILEO_NAME = "Galileo";
 
-export function GalileoAvatar({
-  className = "size-10",
-}: {
-  className?: string;
-}) {
-  return (
-    <img
-      src="/art/galileo.svg"
-      alt="Galileo Galilei"
-      className={`shrink-0 rounded-full ${className}`}
-      draggable={false}
-    />
-  );
+export { GalileoAvatar } from "./GalileoAvatar";
+
+// Per qualche secondo dopo un nuovo messaggio Galileo muove la bocca.
+export function useTalking(trigger: unknown, ms = 2600) {
+  const [talking, setTalking] = useState(false);
+  useEffect(() => {
+    if (trigger == null || trigger === false) return;
+    setTalking(true);
+    const t = setTimeout(() => setTalking(false), ms);
+    return () => clearTimeout(t);
+  }, [trigger, ms]);
+  return talking;
 }
 
 // Vignetta: Galileo compare accanto alla sfida e dà un consiglio.
@@ -27,13 +27,19 @@ export function GalileoBubble({
   text: string;
   onClose?: () => void;
 }) {
+  const talking = useTalking(text);
   return (
     <div
-      className="flex items-end gap-2 animate-fade-in"
+      className="gal-pop flex items-end gap-2"
       role="status"
       aria-live="polite"
     >
-      <GalileoAvatar className="size-12 shadow-md" />
+      <GalileoAvatar
+        className="size-20 drop-shadow-md"
+        framed={false}
+        talking={talking}
+        excited={talking}
+      />
       <div className="relative flex-1 rounded-2xl rounded-bl-sm border border-amber-300 bg-amber-50 px-3 py-2 text-sm leading-snug text-amber-950 shadow-sm">
         <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-700">
           {GALILEO_NAME} ti suggerisce

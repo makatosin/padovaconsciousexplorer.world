@@ -7,7 +7,7 @@ import { Send } from "lucide-react";
 import { toast } from "sonner";
 import { chatWithMentorGeneral } from "@/lib/game.functions";
 import { getDemoToken } from "@/lib/demo-token";
-import { GalileoAvatar } from "./Galileo";
+import { GalileoAvatar, useTalking } from "./Galileo";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -29,6 +29,8 @@ export function MentorChatDialog({
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const lastReply = messages.length > 1 ? messages.length : null;
+  const talking = useTalking(lastReply) || busy;
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -57,7 +59,7 @@ export function MentorChatDialog({
       <DialogContent className="z-[1500] flex h-[85vh] max-w-md flex-col p-0 sm:h-[80vh]">
         <DialogHeader className="border-b border-border/60 p-4">
           <DialogTitle className="flex items-center gap-2 text-base">
-            <GalileoAvatar className="size-9" />
+            <GalileoAvatar className="size-12" talking={talking} />
             <span>
               Galileo
               <span className="block text-[11px] font-normal text-muted-foreground">

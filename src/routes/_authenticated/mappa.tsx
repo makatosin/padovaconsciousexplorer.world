@@ -408,7 +408,7 @@ function MapPage() {
         aria-label="Parla con Galileo"
         className="absolute bottom-20 right-3 z-[500] flex flex-col items-center gap-0.5 transition active:scale-95"
       >
-        <GalileoAvatar className="size-14 border-2 border-white shadow-lg" />
+        <GalileoAvatar className="size-16 rounded-full border-2 border-white shadow-lg" />
         <span className="rounded-full bg-card/95 px-1.5 py-0.5 text-[10px] font-semibold shadow">
           Galileo
         </span>
