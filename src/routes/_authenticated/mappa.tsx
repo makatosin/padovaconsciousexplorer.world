@@ -9,10 +9,12 @@ import { Card } from "@/components/ui/card";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { MapPin, Locate, Sparkles, Camera, Send, FlaskConical, Zap, Award, RefreshCw, Footprints, Headphones, Play, Pause, Check, ArrowUp, ArrowDown } from "lucide-react";
+import { MapPin, Locate, Sparkles, Camera, FlaskConical, Zap, Award, RefreshCw, Footprints, Headphones, Play, Pause, Check, ArrowUp, ArrowDown } from "lucide-react";
 import { POIS, BADGES, MISSIONS, haversineMeters, missionsForPoi, type Poi } from "@/lib/pois";
 import { useActiveProgress, useDemoMode, computeNewBadges } from "@/lib/demo-mode";
-import { chatWithMentor, validateTrivia, validatePhoto } from "@/lib/game.functions";
+import { validateTrivia } from "@/lib/game.functions";
+import { POI_SUGGESTIONS, answerAboutPoi } from "@/lib/galileo-brain";
+import { GalileoChat } from "@/components/game/GalileoChat";
 import { MentorChatDialog } from "@/components/game/MentorChatDialog";
 import { AboutDialog, useAboutDialog } from "@/components/game/AboutDialog";
 import { GalileoAvatar, GalileoBubble, HintButton, useGalileoHints } from "@/components/game/Galileo";
@@ -50,7 +52,6 @@ export const Route = createFileRoute("/_authenticated/mappa")({
   component: MapPage,
 });
 
-type ChatMsg = { role: "user" | "assistant"; content: string };
 
 function MapPage() {
   const { progress, completePoi } = useActiveProgress();
@@ -670,11 +671,11 @@ function ChallengePanel({
   onSuccess: () => void;
 }) {
   const triviaFn = useServerFn(validateTrivia);
-  const photoFn = useServerFn(validatePhoto);
   const [answer, setAnswer] = useState("");
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const hints = useGalileoHints(poi, inRange);
 
   const submitTrivia = async () => {
@@ -693,21 +694,17 @@ function ChallengePanel({
     }
   };
 
-  const submitPhoto = async (file: File) => {
-    setBusy(true);
-    setFeedback(null);
-    try {
-      const dataUrl = await compressImage(file);
-      const res = await photoFn({ data: { poiId: poi.id, imageDataUrl: dataUrl, demoToken: getDemoToken() } });
-      setFeedback(res.feedback);
-      if (res.valid) onSuccess();
-      else hints.onWrongAnswer();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Errore");
-    } finally {
-      setBusy(false);
-    }
+  // La foto resta sul telefono: non viene inviata né valutata da un'IA. Basta essere
+  // nel raggio della tappa (la sfida si sblocca solo lì) e scattarla.
+  const submitPhoto = (file: File) => {
+    setPhotoUrl(URL.createObjectURL(file));
+    setFeedback("Che bello scatto! 📸 La foto resta sul tuo telefono come ricordo della tappa.");
+    onSuccess();
   };
+
+  useEffect(() => () => {
+    if (photoUrl) URL.revokeObjectURL(photoUrl);
+  }, [photoUrl]);
 
   return (
     <Card className="border-accent/40 bg-accent/5 p-4">
@@ -810,8 +807,11 @@ function ChallengePanel({
           />
           <Button onClick={() => fileRef.current?.click()} disabled={busy} className="w-full">
             <Camera className="mr-2 size-4" />
-            {busy ? "Analisi AI…" : "Scatta o carica foto"}
+            Scatta la foto
           </Button>
+          {photoUrl && (
+            <img src={photoUrl} alt="La tua foto della tappa" className="max-h-56 w-full rounded-lg object-cover" />
+          )}
         </div>
       )}
 
@@ -990,99 +990,20 @@ function AudioChallenge({ poi, onComplete }: { poi: Poi; onComplete: () => void 
 }
 
 function MentorChat({ poi }: { poi: Poi }) {
-  const chatFn = useServerFn(chatWithMentor);
-  const [messages, setMessages] = useState<ChatMsg[]>([
-    {
-      role: "assistant",
-      content: `Benvenuto a ${poi.name}! Sono Galileo: chiedimi qualsiasi curiosità su questo luogo. 🔭`,
-    },
-  ]);
-  const [input, setInput] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  const send = async () => {
-    const text = input.trim();
-    if (!text || busy) return;
-    const next: ChatMsg[] = [...messages, { role: "user", content: text }];
-    setMessages(next);
-    setInput("");
-    setBusy(true);
-    try {
-      const res = await chatFn({
-        data: { poiId: poi.id, history: messages, userMessage: text, demoToken: getDemoToken() },
-      });
-      setMessages([...next, { role: "assistant", content: res.reply }]);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Errore chat");
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <Card className="p-3">
       <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         <GalileoAvatar className="size-6" />
         Chiedi a Galileo
       </div>
-      <div className="mb-3 max-h-56 space-y-2 overflow-y-auto">
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            className={`rounded-2xl px-3 py-2 text-sm ${
-              m.role === "user"
-                ? "ml-6 bg-primary text-primary-foreground"
-                : "mr-6 bg-muted text-foreground"
-            }`}
-          >
-            {m.content}
-          </div>
-        ))}
-        {busy && (
-          <div className="mr-6 rounded-2xl bg-muted px-3 py-2 text-sm text-muted-foreground">
-            …
-          </div>
-        )}
-      </div>
-      <div className="flex gap-2">
-        <Textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              send();
-            }
-          }}
-          placeholder="Fai una domanda a Galileo…"
-          rows={1}
-          className="min-h-10 resize-none"
-        />
-        <Button size="icon" onClick={send} disabled={busy || !input.trim()}>
-          <Send className="size-4" />
-        </Button>
-      </div>
+      <GalileoChat
+        className="max-h-80"
+        intro={`Benvenuto a ${poi.name}! Sono Galileo: tocca una domanda qui sotto o scrivimi una curiosità su questo luogo. 🔭`}
+        suggestions={POI_SUGGESTIONS}
+        answer={(q) => answerAboutPoi(poi, q)}
+      />
     </Card>
   );
-}
-
-// Le foto degli smartphone pesano spesso 3-10 MB: si ridimensionano a 1280 px
-// prima dell'invio, così il caricamento è rapido anche con poca rete.
-async function compressImage(file: File, maxSide = 1280, quality = 0.8): Promise<string> {
-  try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("canvas non disponibile");
-    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    bitmap.close();
-    return canvas.toDataURL("image/jpeg", quality);
-  } catch {
-    return fileToDataUrl(file);
-  }
 }
 
 function fileToDataUrl(file: File): Promise<string> {

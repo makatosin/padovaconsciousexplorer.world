@@ -74,7 +74,7 @@ export const POIS: Poi[] = [
       "Valida l'immagine se mostra una struttura cilindrica in cemento/pietra tipo torre-serbatoio, un cancello in ferro battuto in stile liberty, terrazze con fontane o mura cinquecentesche. Rifiuta selfie senza contesto, screenshot o luoghi chiaramente diversi.",
     hints: [
       "Sali le terrazze fino in cima al bastione: la Rotonda è il grande cilindro di cemento alto 36 metri, impossibile non vederla.",
-      "Se la foto non viene accettata, fai qualche passo indietro e inquadra tutta la torre, oppure un cancello in ferro battuto con le sue decorazioni.",
+      "Fai qualche passo indietro e inquadra tutta la torre, oppure un cancello in ferro battuto con le sue decorazioni: sarà la tua foto ricordo.",
     ],
     reward_xp: 100,
     recommended_activity:

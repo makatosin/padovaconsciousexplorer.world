@@ -99,10 +99,9 @@ export function AboutDialog({
             <p>
               Salviamo solo il tuo profilo (email, soprannome, avatar), la missione che scegli, i
               punti, le tappe completate con data e ora, i badge e il tempo che passi nell'app.
-              Servono alla ricerca e sono analizzati in forma aggregata. Le foto delle sfide e i
-              messaggi a Galileo sono
-              inviati a un servizio di intelligenza artificiale per la valutazione e la risposta,
-              e non vengono conservati dall'app.
+              Servono alla ricerca e sono analizzati in forma aggregata. Le foto delle sfide e le
+              domande a Galileo restano sul telefono: l'app non usa servizi di intelligenza
+              artificiale e le risposte di Galileo sono scritte in anticipo.
             </p>
           </div>
         </section>
