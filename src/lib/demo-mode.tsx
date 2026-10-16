@@ -22,7 +22,8 @@ type DemoCtx = {
   registerBadgeListener: (fn: (badgeId: string) => void) => () => void;
 };
 
-const Ctx = createContext<DemoCtx | null>(null);
+const g = globalThis as unknown as { __pceDemoCtx?: React.Context<DemoCtx | null> };
+const Ctx = g.__pceDemoCtx ?? (g.__pceDemoCtx = createContext<DemoCtx | null>(null));
 
 export function DemoModeProvider({ children }: { children: React.ReactNode }) {
   const [demoActive, setDemoActive] = useState(() => {
