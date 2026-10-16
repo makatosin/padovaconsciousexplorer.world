@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Sparkles } from "lucide-react";
 import { BADGES } from "@/lib/pois";
 import { useDemoMode } from "@/lib/demo-mode";
 
@@ -54,9 +53,7 @@ export function BadgeUnlockOverlay() {
         })}
       </div>
       <div className="animate-scale-in rounded-3xl border-2 border-primary/40 bg-card p-8 text-center shadow-2xl mx-6">
-        <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
-          <Sparkles className="size-10" />
-        </div>
+        <img src={badge.art} alt="" className="mx-auto mb-4 size-28 animate-scale-in drop-shadow-lg" />
         <div className="text-xs font-semibold uppercase tracking-widest text-primary">
           Nuovo badge sbloccato
         </div>

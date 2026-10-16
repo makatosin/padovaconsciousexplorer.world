@@ -41,12 +41,14 @@ export function MapView({
   visited,
   recenterKey,
   walkerPos,
+  highlight = [],
 }: {
   userPos: { lat: number; lng: number } | null;
   onPoiClick: (poiId: number) => void;
   visited: number[];
   recenterKey: number;
   walkerPos?: { lat: number; lng: number } | null;
+  highlight?: number[];
 }) {
   const center = useMemo<[number, number]>(() => [45.4064, 11.8768], []);
   const flyTarget = useRef<[number, number] | null>(null);
@@ -66,6 +68,7 @@ export function MapView({
       />
       {POIS.map((poi) => {
         const isVisited = visited.includes(poi.id);
+        const inMission = highlight.includes(poi.id);
         return (
           <div key={poi.id}>
             <Circle
@@ -73,8 +76,9 @@ export function MapView({
               radius={poi.geofence_radius_m}
               pathOptions={{
                 color: isVisited ? "oklch(0.52 0.07 145)" : "oklch(0.62 0.14 45)",
-                fillOpacity: 0.12,
-                weight: 2,
+                fillOpacity: inMission && !isVisited ? 0.25 : 0.12,
+                weight: inMission ? 4 : 2,
+                dashArray: inMission && !isVisited ? "6 6" : undefined,
               }}
             />
             <Marker

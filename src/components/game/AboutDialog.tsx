@@ -33,6 +33,16 @@ export function useAboutDialog() {
   return { open, onOpenChange, show: () => setOpen(true) };
 }
 
+// Chiede il permesso per l'avviso di arrivo a una tappa. Va chiamata durante un tocco
+// dell'utente, altrimenti alcuni browser ignorano la richiesta.
+export function requestArrivalNotifications() {
+  try {
+    if ("Notification" in window && Notification.permission === "default") {
+      void Notification.requestPermission();
+    }
+  } catch {}
+}
+
 export function AboutDialog({
   open,
   onOpenChange,
@@ -73,20 +83,29 @@ export function AboutDialog({
           <Lock className="mt-0.5 size-5 shrink-0 text-accent" />
           <div className="space-y-2">
             <p>
-              <strong>La tua posizione non lascia il telefono.</strong> Viene letta solo quando
-              tocchi il pulsante 📍 e serve a controllare, sul dispositivo, se sei vicino a una
-              tappa. Non è tracciata in continuo né salvata.
+              <strong>La tua posizione non lascia il telefono.</strong> Mentre la mappa è aperta
+              viene letta di continuo, per avvisarti quando arrivi a una tappa. Il controllo
+              avviene sul dispositivo: la posizione non viene inviata né salvata. Quando chiudi
+              l'app, la lettura si ferma.
             </p>
             <p>
-              Salviamo solo il tuo profilo (email, soprannome, avatar), i punti, le tappe
-              completate e i badge. Le foto delle sfide e i messaggi al Mentore Storico sono
+              Salviamo solo il tuo profilo (email, soprannome, avatar), la missione che scegli, i
+              punti, le tappe completate con data e ora, i badge e il tempo che passi nell'app.
+              Servono alla ricerca e sono analizzati in forma aggregata. Le foto delle sfide e i
+              messaggi a Galileo sono
               inviati a un servizio di intelligenza artificiale per la valutazione e la risposta,
               e non vengono conservati dall'app.
             </p>
           </div>
         </section>
 
-        <Button className="w-full" onClick={() => onOpenChange(false)}>
+        <Button
+          className="w-full"
+          onClick={() => {
+            requestArrivalNotifications();
+            onOpenChange(false);
+          }}
+        >
           Ho capito, iniziamo
         </Button>
       </DialogContent>

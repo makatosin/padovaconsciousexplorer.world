@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -2.5 851 851">
+  <title>Padova Conscious Explorer</title>
+  <defs><clipPath id="c"><rect x="0" y="-2.5" width="851" height="851" rx="180"/></clipPath></defs>
+  <g clip-path="url(#c)">
+  <rect x="0" y="-2.5" width="851" height="851" fill="#d0dcc5"/>
+  <path fill="#dcb373" d="M-10 790 L48 778 L118 778 Q132 760 150 756 L178 756 L178 741 L204 707 L236 707 L266 732 L266 756 L274 756 L274 717 L318 679 L318 656 L332 656 L332 690 L374 718 L374 756 L412 756 L412 733 L450 700 L488 724 L488 756 L502 756 L502 749 L534 730 L564 693 L636 693 L668 720 L668 756 L672 756 L672 625 L701 565 L730 620 L730 756 L870 756 L870 870 L-10 870 Z"/>
+  <g fill="#549290">
+    <circle cx="467" cy="128" r="20"/>
+    <circle cx="405" cy="189" r="12.5"/>
+    <circle cx="356" cy="191" r="13"/>
+    <circle cx="302" cy="199" r="13"/>
+    <circle cx="247" cy="209" r="17"/>
+    <circle cx="213" cy="247" r="17"/>
+    <circle cx="188" cy="293" r="17"/>
+    <circle cx="215" cy="336" r="17"/>
+    <circle cx="269" cy="362" r="17"/>
+    <circle cx="327" cy="363" r="17"/>
+    <circle cx="386" cy="363" r="17"/>
+    <circle cx="446" cy="363" r="17"/>
+    <circle cx="503" cy="363" r="17"/>
+    <circle cx="563" cy="369" r="15"/>
+    <circle cx="614" cy="390" r="17"/>
+    <circle cx="645" cy="428" r="17"/>
+    <circle cx="644" cy="480" r="17"/>
+    <circle cx="609" cy="517" r="17"/>
+    <circle cx="554" cy="541" r="17"/>
+    <circle cx="493" cy="542" r="17"/>
+    <circle cx="431" cy="542" r="17"/>
+    <circle cx="367" cy="542" r="17"/>
+    <circle cx="301" cy="542" r="17"/>
+    <circle cx="231" cy="550" r="16"/>
+    <circle cx="174" cy="586" r="16"/>
+    <circle cx="143" cy="632" r="16.5"/>
+    <circle cx="137" cy="685" r="16"/>
+    <path fill-rule="evenodd" d="M620.5 320 L553.4 209.8 A78.5 78.5 0 1 1 687.6 209.8 Z M620.5 168.5 m-38.5 0 a38.5 38.5 0 1 0 77 0 a38.5 38.5 0 1 0 -77 0 Z"/>
+  </g>
+  </g>
+</svg>
