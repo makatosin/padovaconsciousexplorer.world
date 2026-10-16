@@ -4,7 +4,7 @@
   "description": "Esplora la Padova meno battuta con Galileo: missioni, sfide e badge.",
   "start_url": "/mappa",
   "display": "standalone",
-  "background_color": "#2b1b5e",
+  "background_color": "#d0dcc5",
   "theme_color": "#2b1b5e",
   "lang": "it",
   "icons": [
