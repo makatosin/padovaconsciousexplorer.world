@@ -15,12 +15,16 @@ const SEEN_KEY = "pce-about-seen-v1";
 // queste tappe e come tratta la posizione, prima di iniziare e ogni volta che serve.
 export function useAboutDialog() {
   const [open, setOpen] = useState(false);
+  // Diventa vero dopo aver controllato se la schermata è già stata vista: fino ad allora
+  // la mappa non chiede la posizione, così il permesso arriva dopo la spiegazione.
+  const [checked, setChecked] = useState(false);
   useEffect(() => {
     try {
       if (localStorage.getItem(SEEN_KEY) !== "1") setOpen(true);
     } catch {
       setOpen(true);
     }
+    setChecked(true);
   }, []);
   const onOpenChange = (o: boolean) => {
     setOpen(o);
@@ -30,7 +34,7 @@ export function useAboutDialog() {
       } catch {}
     }
   };
-  return { open, onOpenChange, show: () => setOpen(true) };
+  return { open, checked, onOpenChange, show: () => setOpen(true) };
 }
 
 // Chiede il permesso per l'avviso di arrivo a una tappa. Va chiamata durante un tocco
@@ -46,9 +50,12 @@ export function requestArrivalNotifications() {
 export function AboutDialog({
   open,
   onOpenChange,
+  onStart,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  // Chiamata al tocco su "iniziamo": la mappa chiede subito il permesso di posizione.
+  onStart?: () => void;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -83,8 +90,9 @@ export function AboutDialog({
           <Lock className="mt-0.5 size-5 shrink-0 text-accent" />
           <div className="space-y-2">
             <p>
-              <strong>La tua posizione non lascia il telefono.</strong> Mentre la mappa è aperta
-              viene letta di continuo, per avvisarti quando arrivi a una tappa. Il controllo
+              <strong>La tua posizione non lascia il telefono.</strong> Te la chiediamo subito per
+              consigliarti la missione più vicina a te; poi, mentre la mappa è aperta, viene letta
+              di continuo per avvisarti quando arrivi a una tappa. Il controllo
               avviene sul dispositivo: la posizione non viene inviata né salvata. Quando chiudi
               l'app, la lettura si ferma.
             </p>
@@ -102,11 +110,12 @@ export function AboutDialog({
         <Button
           className="w-full"
           onClick={() => {
+            onStart?.();
             requestArrivalNotifications();
             onOpenChange(false);
           }}
         >
-          Ho capito, iniziamo
+          Consenti la posizione e iniziamo
         </Button>
       </DialogContent>
     </Dialog>

@@ -242,3 +242,41 @@ export function haversineMeters(
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(a));
 }
+// Oltre questa distanza dalla tappa più vicina l'utente non è ancora a Padova e la
+// missione non viene consigliata.
+const FAR_FROM_PADOVA_M = 15_000;
+
+export type MissionSuggestion = {
+  mission: Mission;
+  poi: Poi;
+  distance: number;
+  far: boolean;
+};
+
+// Missione consigliata in base alla posizione: quella con la tappa non ancora visitata
+// più vicina all'utente. A parità (il Parco Treves è in due missioni) vince quella le cui
+// tappe rimanenti sono in media più vicine. Il calcolo avviene solo sul telefono.
+export function suggestMission(
+  pos: { lat: number; lng: number },
+  visited: number[],
+): MissionSuggestion | null {
+  let best: (MissionSuggestion & { avg: number }) | null = null;
+  for (const mission of MISSIONS) {
+    const remaining = POIS.filter((p) => mission.poiIds.includes(p.id) && !visited.includes(p.id));
+    if (remaining.length === 0) continue;
+    const dists = remaining.map((p) => haversineMeters(pos.lat, pos.lng, p.latitude, p.longitude));
+    const distance = Math.min(...dists);
+    const avg = dists.reduce((a, b) => a + b, 0) / dists.length;
+    if (!best || distance < best.distance - 1 || (Math.abs(distance - best.distance) <= 1 && avg < best.avg)) {
+      best = { mission, poi: remaining[dists.indexOf(distance)], distance, avg, far: distance > FAR_FROM_PADOVA_M };
+    }
+  }
+  if (!best) return null;
+  const { avg: _avg, ...suggestion } = best;
+  return suggestion;
+}
+
+export function formatDistance(m: number): string {
+  if (m < 1000) return `${Math.max(10, Math.round(m / 10) * 10)} m`;
+  return `${(m / 1000).toLocaleString("it-IT", { maximumFractionDigits: 1 })} km`;
+}
