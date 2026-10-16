@@ -22,6 +22,7 @@ export type Database = {
           email: string | null
           id: string
           nickname: string | null
+          starting_mission: string | null
           updated_at: string
         }
         Insert: {
@@ -31,6 +32,7 @@ export type Database = {
           email?: string | null
           id: string
           nickname?: string | null
+          starting_mission?: string | null
           updated_at?: string
         }
         Update: {
@@ -40,7 +42,47 @@ export type Database = {
           email?: string | null
           id?: string
           nickname?: string | null
+          starting_mission?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      app_sessions: {
+        Row: {
+          id: string
+          last_seen_at: string
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_seen_at?: string
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_seen_at?: string
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      poi_visits: {
+        Row: {
+          completed_at: string
+          poi_id: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          poi_id: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          poi_id?: number
+          user_id?: string
         }
         Relationships: []
       }

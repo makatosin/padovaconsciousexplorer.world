@@ -16,7 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Toaster } from "@/components/ui/sonner";
-import { Trophy, Sparkles, MapPin, CheckCircle2, Circle, RotateCcw, Pencil, Check, X, Loader2 } from "lucide-react";
+import { Trophy, MapPin, CheckCircle2, Circle, RotateCcw, Pencil, Check, X, Loader2, ChevronDown } from "lucide-react";
 import { LogIn } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { POIS, BADGES, MISSIONS } from "@/lib/pois";
@@ -68,6 +68,7 @@ function ProfilePage() {
     enabled: !demoActive && hasSession === true,
   });
 
+  const [badgesOpen, setBadgesOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editNickname, setEditNickname] = useState("");
   const [editAvatar, setEditAvatar] = useState(1);
@@ -142,6 +143,7 @@ function ProfilePage() {
   const pct = Math.min(100, (visitedCount / total) * 100);
   const visited = POIS.filter((p) => progress.visited_places.includes(p.id));
   const remaining = POIS.filter((p) => !progress.visited_places.includes(p.id));
+  const earnedCount = BADGES.filter((b) => progress.badges_earned.includes(b.id)).length;
 
   const handleReset = async () => {
     if (!confirm("Azzerare tutti i progressi?")) return;
@@ -312,8 +314,13 @@ function ProfilePage() {
           );
         })()}
 
-        <Card className="mt-4 p-3">
-          <div className="flex items-center gap-3">
+        {/* Barra del progresso: toccandola si aprono i badge */}
+        <Card className="mt-4 p-0">
+          <button
+            onClick={() => setBadgesOpen((o) => !o)}
+            aria-expanded={badgesOpen}
+            className="flex w-full items-center gap-3 p-3 text-left"
+          >
             <Trophy className="size-5 text-primary" />
             <div className="flex-1">
               <div className="mb-1 flex items-baseline justify-between">
@@ -321,49 +328,50 @@ function ProfilePage() {
                   Progresso
                 </span>
                 <span className="text-sm font-bold text-primary">
-                  {progress.badges_earned.length} 🏅
+                  {earnedCount}/{BADGES.length} 🏅
                 </span>
               </div>
               <ProgressBar value={pct} className="h-2" />
-              <div className="mt-1 text-[11px] text-muted-foreground">
-                {visitedCount} di {total} tappe completate
+              <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+                <span>
+                  {visitedCount} di {total} tappe completate
+                </span>
+                <span className="flex items-center gap-0.5 font-medium text-primary">
+                  {badgesOpen ? "Nascondi badge" : "Vedi badge"}
+                  <ChevronDown
+                    className={`size-3.5 transition-transform ${badgesOpen ? "rotate-180" : ""}`}
+                  />
+                </span>
               </div>
             </div>
-          </div>
+          </button>
+          {badgesOpen && (
+            <div className="grid grid-cols-2 gap-2 border-t border-border/60 p-3">
+              {BADGES.map((b) => {
+                const earned = progress.badges_earned.includes(b.id);
+                return (
+                  <div
+                    key={b.id}
+                    className={`flex flex-col items-center rounded-xl p-2 text-center ${
+                      earned ? "bg-primary/5" : ""
+                    }`}
+                  >
+                    <img
+                      src={b.art}
+                      alt=""
+                      className={`mb-1 size-16 ${earned ? "" : "opacity-40 grayscale"}`}
+                    />
+                    <div className="text-[11px] font-semibold leading-tight">{b.title}</div>
+                    <div className="mt-0.5 text-[9px] leading-tight text-muted-foreground">
+                      {earned ? "Ottenuto!" : b.description}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </Card>
       </header>
-
-      {/* Badges */}
-      <section className="px-4 pb-5">
-        <h2 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          <Sparkles className="size-3.5" /> Badge
-        </h2>
-        <div className="grid grid-cols-3 gap-2">
-          {BADGES.map((b) => {
-            const earned = progress.badges_earned.includes(b.id);
-            return (
-              <Card
-                key={b.id}
-                className={`flex flex-col items-center p-3 text-center ${
-                  earned ? "border-primary/50 bg-primary/5" : "opacity-60"
-                }`}
-              >
-                <div
-                  className={`mb-1.5 flex size-10 items-center justify-center rounded-full ${
-                    earned ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  <Sparkles className="size-5" />
-                </div>
-                <div className="text-[11px] font-semibold leading-tight">{b.title}</div>
-                <div className="mt-0.5 text-[9px] leading-tight text-muted-foreground">
-                  {b.description}
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      </section>
 
       {/* Missioni tematiche */}
       <section className="px-4 pb-5">
@@ -377,8 +385,13 @@ function ProfilePage() {
             return (
               <li key={m.id}>
                 <Card className={`p-3 ${complete ? "border-primary/50 bg-primary/5" : ""}`}>
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-sm font-semibold">
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={m.badgeArt}
+                      alt=""
+                      className={`size-9 shrink-0 ${complete ? "" : "opacity-50 grayscale"}`}
+                    />
+                    <span className="flex-1 text-sm font-semibold">
                       {m.emoji} {m.title}
                     </span>
                     <span className="text-[11px] font-medium text-muted-foreground">
@@ -414,34 +427,6 @@ function ProfilePage() {
         </ul>
       </section>
 
-      {/* Visited */}
-      <section className="px-4 pb-4">
-        <h2 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          <CheckCircle2 className="size-3.5 text-primary" /> LUOGHI VISITATI ({visited.length})
-        </h2>
-        {visited.length === 0 ? (
-          <Card className="p-3 text-center text-xs text-muted-foreground">
-            Nessuna tappa ancora completata. Vai sulla mappa e inizia l'avventura!
-          </Card>
-        ) : (
-          <ul className="space-y-1.5">
-            {visited.map((poi) => (
-              <li key={poi.id}>
-                <Card className="flex items-center gap-2 p-2.5">
-                  <CheckCircle2 className="size-4 shrink-0 text-primary" />
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold">{poi.name}</div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : "🧩 Trivia"}
-                    </div>
-                  </div>
-                </Card>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
       {/* Remaining */}
       <section className="px-4 pb-4">
         <h2 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -470,6 +455,34 @@ function ProfilePage() {
         )}
       </section>
 
+      {/* Visited */}
+      <section className="px-4 pb-4">
+        <h2 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <CheckCircle2 className="size-3.5 text-primary" /> LUOGHI VISITATI ({visited.length})
+        </h2>
+        {visited.length === 0 ? (
+          <Card className="p-3 text-center text-xs text-muted-foreground">
+            Nessuna tappa ancora completata. Vai sulla mappa e inizia l'avventura!
+          </Card>
+        ) : (
+          <ul className="space-y-1.5">
+            {visited.map((poi) => (
+              <li key={poi.id}>
+                <Card className="flex items-center gap-2 p-2.5">
+                  <CheckCircle2 className="size-4 shrink-0 text-primary" />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold">{poi.name}</div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : "🧩 Trivia"}
+                    </div>
+                  </div>
+                </Card>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
       {demoActive && (
         <div className="px-4 pt-2">
           <Button
@@ -483,7 +496,7 @@ function ProfilePage() {
         </div>
       )}
       <p className="px-4 pt-4 pb-2 text-center text-[10px] text-muted-foreground">
-        Versione 1.3 · 14/10/2026 · Padova verde con due parchi
+        Versione 1.4 · 16/10/2026 · Galileo, missioni e nuovi badge
       </p>
       </>
       )}

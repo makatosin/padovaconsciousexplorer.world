@@ -9,12 +9,15 @@ import { Card } from "@/components/ui/card";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { MapPin, Locate, Sparkles, Camera, Send, FlaskConical, MessageCircle, Zap, Award, RefreshCw, Footprints, Headphones, Play, Pause, Check, ArrowUp, ArrowDown } from "lucide-react";
-import { POIS, BADGES, haversineMeters, missionsForPoi, type Poi } from "@/lib/pois";
+import { MapPin, Locate, Sparkles, Camera, Send, FlaskConical, Zap, Award, RefreshCw, Footprints, Headphones, Play, Pause, Check, ArrowUp, ArrowDown } from "lucide-react";
+import { POIS, BADGES, MISSIONS, haversineMeters, missionsForPoi, type Poi } from "@/lib/pois";
 import { useActiveProgress, useDemoMode, computeNewBadges } from "@/lib/demo-mode";
 import { chatWithMentor, validateTrivia, validatePhoto } from "@/lib/game.functions";
 import { MentorChatDialog } from "@/components/game/MentorChatDialog";
 import { AboutDialog, useAboutDialog } from "@/components/game/AboutDialog";
+import { GalileoAvatar, GalileoBubble, HintButton, useGalileoHints } from "@/components/game/Galileo";
+import { MissionPickerDialog, useMissionPicker } from "@/components/game/MissionPickerDialog";
+import { setStartingMission } from "@/lib/progress.functions";
 import portaPortelloAudio from "@/assets/porta-portello.wav.asset.json";
 
 const MapView = lazy(() => import("@/components/game/MapView"));
@@ -58,11 +61,17 @@ function MapPage() {
   const [activePoiId, setActivePoiId] = useState<number | null>(null);
   const [recenterKey, setRecenterKey] = useState(0);
   const [tracking, setTracking] = useState(false);
+  const [gpsDenied, setGpsDenied] = useState(false);
   const [walkerPos, setWalkerPos] = useState<{ lat: number; lng: number } | null>(null);
   const [mentorOpen, setMentorOpen] = useState(false);
   const [sandboxOpen, setSandboxOpen] = useState(false);
   const about = useAboutDialog();
+  const missionPicker = useMissionPicker(about.open);
+  const setMissionFn = useServerFn(setStartingMission);
+  const activeMission = MISSIONS.find((m) => m.id === missionPicker.missionId) ?? null;
   const walkTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const firstFixRef = useRef(true);
+  const notifiedRef = useRef<Set<number>>(new Set());
 
   const activePoi = useMemo(
     () => POIS.find((p) => p.id === activePoiId) ?? null,
@@ -82,7 +91,83 @@ function MapPage() {
     activePoi != null &&
     distance - tolerance <= activePoi.geofence_radius_m;
 
+  // Posizione sempre attiva mentre la mappa è aperta (non in modalità demo, dove ci si
+  // sposta con il teletrasporto). La posizione resta sul telefono e non viene salvata.
+  useEffect(() => {
+    if (demoActive || typeof navigator === "undefined" || !navigator.geolocation) return;
+    const id = navigator.geolocation.watchPosition(
+      (pos) => {
+        setGpsDenied(false);
+        setUserPos({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: Math.round(pos.coords.accuracy),
+        });
+        if (firstFixRef.current) {
+          firstFixRef.current = false;
+          setRecenterKey((k) => k + 1);
+        }
+      },
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) setGpsDenied(true);
+      },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 30000 },
+    );
+    return () => navigator.geolocation.clearWatch(id);
+  }, [demoActive]);
+
+  // Avviso quando si entra nel raggio di una tappa non ancora completata (una volta per
+  // tappa a ogni apertura dell'app): messaggio nell'app, vibrazione e, se l'app è in
+  // secondo piano e il permesso è stato dato, una notifica del telefono.
+  useEffect(() => {
+    if (!userPos) return;
+    const tol = Math.min(userPos.accuracy ?? 0, MAX_GPS_TOLERANCE_M);
+    for (const poi of POIS) {
+      if (progress.visited_places.includes(poi.id) || notifiedRef.current.has(poi.id)) continue;
+      const d = haversineMeters(userPos.lat, userPos.lng, poi.latitude, poi.longitude);
+      if (d - tol > poi.geofence_radius_m) continue;
+      notifiedRef.current.add(poi.id);
+      try {
+        navigator.vibrate?.([200, 100, 200]);
+      } catch {}
+      toast.success(`Sei arrivato a ${poi.name}!`, {
+        description: "La sfida è sbloccata.",
+        duration: 8000,
+        action: { label: "Apri", onClick: () => setActivePoiId(poi.id) },
+      });
+      try {
+        if (
+          document.visibilityState === "hidden" &&
+          "Notification" in window &&
+          Notification.permission === "granted"
+        ) {
+          new Notification(`Sei arrivato a ${poi.name}!`, {
+            body: "Apri Padova Conscious Explorer: la sfida è sbloccata.",
+            icon: "/icon-192.png",
+            tag: `poi-${poi.id}`,
+          });
+        }
+      } catch {}
+      break;
+    }
+  }, [userPos, progress.visited_places]);
+
+  const chooseMission = (missionId: string) => {
+    missionPicker.choose(missionId);
+    const m = MISSIONS.find((x) => x.id === missionId);
+    if (!m) return;
+    const next = POIS.find((p) => m.poiIds.includes(p.id) && !progress.visited_places.includes(p.id));
+    toast.success(`Missione ${m.title}`, {
+      description: next ? `Prossima tappa: ${next.name}.` : "Hai già completato tutte le sue tappe!",
+    });
+    if (!demoActive) setMissionFn({ data: { missionId: m.id as "acqua" | "mura" | "verde" } }).catch(() => {});
+  };
+
   const refreshLocation = () => {
+    if (userPos && !demoActive) {
+      setRecenterKey((k) => k + 1);
+      return;
+    }
     if (!navigator.geolocation) {
       toast.error("Geolocalizzazione non disponibile.");
       return;
@@ -227,46 +312,77 @@ function MapPage() {
               visited={progress.visited_places}
               recenterKey={recenterKey}
               walkerPos={walkerPos}
+              highlight={activeMission?.poiIds ?? []}
             />
           </Suspense>
         </ClientOnly>
       </div>
 
-      {/* Legend of remaining POIs (top-right) */}
-      <aside className={`pointer-events-none absolute right-2 z-[500] w-[190px] ${demoActive ? "top-10" : "top-2"}`}>
+      {/* Legenda: missione attiva e luoghi (in alto a destra) */}
+      <aside className={`pointer-events-none absolute right-2 z-[500] w-[200px] ${demoActive ? "top-10" : "top-2"}`}>
         <Card className="pointer-events-auto border-border/60 bg-card/95 p-2 shadow-md backdrop-blur">
-          <div className="mb-1.5 flex items-center gap-1.5 px-1">
-            <MapPin className="size-3.5 text-accent" />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              LUOGHI
-            </span>
-          </div>
+          <button
+            onClick={missionPicker.show}
+            className="mb-1.5 flex w-full items-center gap-1.5 rounded-md px-1 py-1 text-left hover:bg-muted"
+          >
+            {activeMission ? (
+              <>
+                <img src={activeMission.badgeArt} alt="" className="size-6 shrink-0" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Missione
+                  </span>
+                  <span className="block truncate text-[11px] font-semibold">{activeMission.title}</span>
+                </span>
+              </>
+            ) : (
+              <>
+                <MapPin className="size-3.5 text-accent" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Scegli una missione
+                </span>
+              </>
+            )}
+          </button>
           <ul className="space-y-1">
-            {POIS.map((poi) => {
-              const visited = progress.visited_places.includes(poi.id);
-              return (
-                <li key={poi.id}>
-                  <button
-                    onClick={() => setActivePoiId(poi.id)}
-                    className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[11px] transition ${
-                      visited
-                        ? "bg-primary/10 text-primary line-through opacity-70"
-                        : "hover:bg-muted"
-                    }`}
-                  >
-                    <span
-                      className={`inline-block size-2 rounded-full ${
-                        visited ? "bg-primary" : "bg-accent"
+            {[...POIS]
+              .sort((a, b) => {
+                const ia = activeMission?.poiIds.includes(a.id) ? 0 : 1;
+                const ib = activeMission?.poiIds.includes(b.id) ? 0 : 1;
+                return ia - ib;
+              })
+              .map((poi) => {
+                const visited = progress.visited_places.includes(poi.id);
+                const inMission = activeMission?.poiIds.includes(poi.id) ?? false;
+                return (
+                  <li key={poi.id}>
+                    <button
+                      onClick={() => setActivePoiId(poi.id)}
+                      className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[11px] transition ${
+                        visited
+                          ? "bg-primary/10 text-primary line-through opacity-70"
+                          : inMission
+                            ? "bg-accent/10 hover:bg-accent/20"
+                            : "hover:bg-muted"
                       }`}
-                    />
-                    <span className="truncate font-medium">{poi.name}</span>
-                  </button>
-                </li>
-              );
-            })}
+                    >
+                      <span
+                        className={`inline-block size-2 rounded-full ${
+                          visited ? "bg-primary" : "bg-accent"
+                        }`}
+                      />
+                      <span className="truncate font-medium">{poi.name}</span>
+                    </button>
+                  </li>
+                );
+              })}
           </ul>
-          <div className="mt-1.5 border-t border-border/60 pt-1.5 px-1 text-[9px] text-muted-foreground">
-            🔒 Tracciamento off. Tocca 📍 per aggiornare.
+          <div className="mt-1.5 border-t border-border/60 px-1 pt-1.5 text-[9px] text-muted-foreground">
+            {demoActive
+              ? "Demo: spostati con la Sandbox."
+              : gpsDenied
+                ? "📍 Posizione bloccata: attivala nelle impostazioni del browser."
+                : "📍 Posizione attiva solo a mappa aperta. Non viene salvata."}
           </div>
           <button
             onClick={about.show}
@@ -280,19 +396,22 @@ function MapPage() {
       {/* Locate FAB */}
       <button
         onClick={refreshLocation}
-        aria-label="Verifica la mia posizione"
+        aria-label="Centra la mappa sulla mia posizione"
         className="absolute bottom-4 right-4 z-[500] flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition active:scale-95"
       >
         <Locate className={`size-6 ${tracking ? "animate-spin" : ""}`} />
       </button>
 
-      {/* Mentor FAB (above Locate) */}
+      {/* Galileo: apre la chat (sopra il pulsante della posizione) */}
       <button
         onClick={() => setMentorOpen(true)}
-        aria-label="Chat con il Mentore Storico"
-        className="absolute bottom-20 right-4 z-[500] flex size-12 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-lg transition active:scale-95"
+        aria-label="Parla con Galileo"
+        className="absolute bottom-20 right-3 z-[500] flex flex-col items-center gap-0.5 transition active:scale-95"
       >
-        <MessageCircle className="size-5" />
+        <GalileoAvatar className="size-14 border-2 border-white shadow-lg" />
+        <span className="rounded-full bg-card/95 px-1.5 py-0.5 text-[10px] font-semibold shadow">
+          Galileo
+        </span>
       </button>
 
       {/* Sandbox / Demo entry (bottom-left) */}
@@ -334,6 +453,12 @@ function MapPage() {
 
       <MentorChatDialog open={mentorOpen} onOpenChange={setMentorOpen} />
       <AboutDialog open={about.open} onOpenChange={about.onOpenChange} />
+      <MissionPickerDialog
+        open={missionPicker.open && !about.open}
+        onOpenChange={missionPicker.onOpenChange}
+        currentId={missionPicker.missionId}
+        onChoose={(m) => chooseMission(m.id)}
+      />
 
       <PoiSheet
         poi={activePoi}
@@ -405,7 +530,7 @@ function SandboxPanel({
 
       <p className="text-[10px] leading-relaxed text-muted-foreground">
         In modalità demo i progressi non vengono salvati sul tuo account. Le
-        sfide AI (trivia e foto) e la chat con il Mentore sono reali.
+        sfide AI (trivia e foto) e la chat con Galileo sono reali.
       </p>
     </div>
   );
@@ -507,6 +632,7 @@ function ChallengePanel({
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const hints = useGalileoHints(poi, inRange);
 
   const submitTrivia = async () => {
     if (!answer.trim()) return;
@@ -516,6 +642,7 @@ function ChallengePanel({
       const res = await triviaFn({ data: { poiId: poi.id, answer, demoToken: getDemoToken() } });
       setFeedback(res.feedback);
       if (res.valid) onSuccess();
+      else hints.onWrongAnswer();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Errore");
     } finally {
@@ -531,6 +658,7 @@ function ChallengePanel({
       const res = await photoFn({ data: { poiId: poi.id, imageDataUrl: dataUrl, demoToken: getDemoToken() } });
       setFeedback(res.feedback);
       if (res.valid) onSuccess();
+      else hints.onWrongAnswer();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Errore");
     } finally {
@@ -549,6 +677,11 @@ function ChallengePanel({
           <Sparkles className="size-4" />
         )}
         Sfida
+        {inRange && (
+          <span className="ml-auto normal-case tracking-normal">
+            <HintButton onClick={hints.askHint} hasMore={hints.hasMore} />
+          </span>
+        )}
       </div>
       <p className="mb-3 text-sm leading-relaxed">{poi.challenge_text}</p>
 
@@ -563,6 +696,7 @@ function ChallengePanel({
           poi={poi}
           onSuccess={onSuccess}
           onFeedback={setFeedback}
+          onWrong={hints.onWrongAnswer}
         />
       )}
 
@@ -587,6 +721,7 @@ function ChallengePanel({
                     });
                     setFeedback(res.feedback);
                     if (res.valid) onSuccess();
+                    else hints.onWrongAnswer();
                   } catch (e) {
                     toast.error(e instanceof Error ? e.message : "Errore");
                   } finally {
@@ -641,7 +776,13 @@ function ChallengePanel({
         <AudioChallenge poi={poi} onComplete={onSuccess} />
       )}
 
-      {feedback && <p className="mt-3 text-sm italic text-muted-foreground">🤖 {feedback}</p>}
+      {feedback && <p className="mt-3 text-sm italic text-muted-foreground">{feedback}</p>}
+
+      {inRange && hints.text && (
+        <div className="mt-3">
+          <GalileoBubble text={hints.text} onClose={hints.hide} />
+        </div>
+      )}
     </Card>
   );
 }
@@ -650,10 +791,12 @@ function OrderingChallenge({
   poi,
   onSuccess,
   onFeedback,
+  onWrong,
 }: {
   poi: Poi;
   onSuccess: () => void;
   onFeedback: (msg: string | null) => void;
+  onWrong: () => void;
 }) {
   const ordering = poi.ordering!;
   const [order, setOrder] = useState(() => ordering.items.map((i) => i.key));
@@ -677,6 +820,7 @@ function OrderingChallenge({
       onSuccess();
     } else {
       onFeedback("Sequenza non corretta. Prova a riordinare gli eventi.");
+      onWrong();
     }
   };
 
@@ -807,7 +951,7 @@ function MentorChat({ poi }: { poi: Poi }) {
   const [messages, setMessages] = useState<ChatMsg[]>([
     {
       role: "assistant",
-      content: `Benvenuto a ${poi.name}! Sono il tuo Mentore Storico. Chiedimi qualsiasi curiosità su questo luogo. ✨`,
+      content: `Benvenuto a ${poi.name}! Sono Galileo: chiedimi qualsiasi curiosità su questo luogo. 🔭`,
     },
   ]);
   const [input, setInput] = useState("");
@@ -834,8 +978,9 @@ function MentorChat({ poi }: { poi: Poi }) {
 
   return (
     <Card className="p-3">
-      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Mentore Storico
+      <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <GalileoAvatar className="size-6" />
+        Chiedi a Galileo
       </div>
       <div className="mb-3 max-h-56 space-y-2 overflow-y-auto">
         {messages.map((m, i) => (
@@ -866,7 +1011,7 @@ function MentorChat({ poi }: { poi: Poi }) {
               send();
             }
           }}
-          placeholder="Fai una domanda al mentore…"
+          placeholder="Fai una domanda a Galileo…"
           rows={1}
           className="min-h-10 resize-none"
         />

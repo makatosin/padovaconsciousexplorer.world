@@ -3,10 +3,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Sparkles } from "lucide-react";
+import { Send } from "lucide-react";
 import { toast } from "sonner";
 import { chatWithMentorGeneral } from "@/lib/game.functions";
 import { getDemoToken } from "@/lib/demo-token";
+import { GalileoAvatar } from "./Galileo";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -22,7 +23,7 @@ export function MentorChatDialog({
     {
       role: "assistant",
       content:
-        "Ciao esploratore! Sono il tuo Mentore Storico di Padova. Chiedimi di un quartiere periferico, un parco nascosto o una curiosità storica. 🌿",
+        "Salve, esploratore! Sono Galileo Galilei: a Padova ho insegnato per diciotto anni, e la conosco come le lune di Giove. Chiedimi di un quartiere, di un parco nascosto o di una curiosità storica. 🔭",
     },
   ]);
   const [input, setInput] = useState("");
@@ -56,23 +57,33 @@ export function MentorChatDialog({
       <DialogContent className="z-[1500] flex h-[85vh] max-w-md flex-col p-0 sm:h-[80vh]">
         <DialogHeader className="border-b border-border/60 p-4">
           <DialogTitle className="flex items-center gap-2 text-base">
-            <Sparkles className="size-4 text-primary" />
-            Mentore Storico
+            <GalileoAvatar className="size-9" />
+            <span>
+              Galileo
+              <span className="block text-[11px] font-normal text-muted-foreground">
+                La tua guida per Padova
+              </span>
+            </span>
           </DialogTitle>
         </DialogHeader>
         <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto p-4">
-          {messages.map((m, i) => (
-            <div
-              key={i}
-              className={`rounded-2xl px-3 py-2 text-sm leading-relaxed ${
-                m.role === "user"
-                  ? "ml-8 bg-primary text-primary-foreground"
-                  : "mr-8 bg-muted text-foreground"
-              }`}
-            >
-              {m.content}
-            </div>
-          ))}
+          {messages.map((m, i) =>
+            m.role === "user" ? (
+              <div
+                key={i}
+                className="ml-8 rounded-2xl bg-primary px-3 py-2 text-sm leading-relaxed text-primary-foreground"
+              >
+                {m.content}
+              </div>
+            ) : (
+              <div key={i} className="mr-6 flex items-end gap-2">
+                <GalileoAvatar className="size-7" />
+                <div className="rounded-2xl rounded-bl-sm bg-muted px-3 py-2 text-sm leading-relaxed text-foreground">
+                  {m.content}
+                </div>
+              </div>
+            ),
+          )}
           {busy && (
             <div className="mr-8 rounded-2xl bg-muted px-3 py-2 text-sm text-muted-foreground">
               …
@@ -89,7 +100,7 @@ export function MentorChatDialog({
                 send();
               }
             }}
-            placeholder="Fai una domanda al mentore…"
+            placeholder="Fai una domanda a Galileo…"
             rows={1}
             className="min-h-10 resize-none"
             disabled={busy}

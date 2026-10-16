@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import { Compass, FlaskConical } from "lucide-react";
+import { FlaskConical } from "lucide-react";
 import { AVATARS } from "@/lib/avatars";
 import { z } from "zod";
 import { checkNicknameAvailable } from "@/lib/progress.functions";
@@ -162,9 +162,11 @@ function AuthPage() {
       <Toaster position="top-center" richColors />
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center text-center">
-          <div className="mb-3 flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
-            <Compass className="size-7" />
-          </div>
+          <img
+            src="/art/logo.svg"
+            alt="Logo di Padova Conscious Explorer"
+            className="mb-3 size-24 drop-shadow-xl"
+          />
           <h1 className="text-xl font-bold tracking-tight">Padova Conscious Explorer</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {mode === "login" ? "Accedi al tuo viaggio" : "Crea il tuo account"}

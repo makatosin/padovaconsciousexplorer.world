@@ -7,6 +7,7 @@ import { DemoModeProvider, useDemoMode } from "@/lib/demo-mode";
 import { BadgeUnlockOverlay } from "@/components/game/BadgeUnlockOverlay";
 import { checkDemoSession, clearDemoSession } from "@/lib/demo-auth.functions";
 import { getDemoToken, clearDemoToken } from "@/lib/demo-token";
+import { useAppSession } from "@/lib/use-app-session";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -51,6 +52,7 @@ function AuthedLayoutInner() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { demoActive, exitDemo } = useDemoMode();
+  useAppSession(!demoActive);
 
   const signOut = async () => {
     if (demoActive) {

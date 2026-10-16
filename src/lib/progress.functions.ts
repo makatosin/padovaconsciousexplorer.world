@@ -53,6 +53,15 @@ export const completePoiProgress = createServerFn({ method: "POST" })
       .from("user_progress")
       .upsert({ user_id: context.userId, ...next, updated_at: new Date().toISOString() });
     if (error) throw new Error(error.message);
+    // Data e ora della tappa completata (dato di ricerca). Un errore qui non deve
+    // far perdere all'utente la tappa appena superata.
+    const { error: visitErr } = await context.supabase
+      .from("poi_visits")
+      .upsert(
+        { user_id: context.userId, poi_id: data.poiId },
+        { onConflict: "user_id,poi_id", ignoreDuplicates: true },
+      );
+    if (visitErr) console.error("poi_visits:", visitErr.message);
     return next;
   });
 
@@ -126,4 +135,44 @@ export const checkNicknameAvailable = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     return { available: Boolean(available) };
+  });
+export const startAppSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("app_sessions")
+      .insert({ user_id: context.userId })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return { id: data.id };
+  });
+
+const PingInput = z.object({ id: z.string().uuid() });
+
+export const pingAppSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => PingInput.parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("app_sessions")
+      .update({ last_seen_at: new Date().toISOString() })
+      .eq("id", data.id)
+      .eq("user_id", context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+const MissionInput = z.object({ missionId: z.enum(["acqua", "mura", "verde"]) });
+
+export const setStartingMission = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => MissionInput.parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("profiles")
+      .update({ starting_mission: data.missionId, updated_at: new Date().toISOString() })
+      .eq("id", context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });

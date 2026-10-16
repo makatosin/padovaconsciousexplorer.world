@@ -16,12 +16,16 @@ export type Poi = {
     items: { key: string; label: string }[];
   };
   choices?: { key: string; label: string }[];
+  // Aiutini di Galileo, dal più vago al più esplicito: compaiono con il pulsante
+  // lampadina, dopo una risposta sbagliata o se la sfida resta aperta a lungo.
+  hints: string[];
 };
 
 export type Badge = {
   id: string;
   title: string;
   description: string;
+  art: string;
   unlock: (visited: number[]) => boolean;
 };
 
@@ -47,6 +51,10 @@ export const POIS: Poi[] = [
         { key: "D", label: "L'installazione del primo parafulmine pubblico della Repubblica di Venezia." },
       ],
     },
+    hints: [
+      "Pensa a come è cambiata la torre nei secoli: prima è servita per punire, poi per guardare il cielo, e solo alla fine è diventata un museo.",
+      "Ezzelino III visse nel Duecento, il parafulmine arrivò nel 1773 e le osservazioni si spostarono ad Asiago nel 1942. Il museo è la cosa più recente!",
+    ],
     reward_xp: 100,
     recommended_activity:
       "🌌 Visite Serali al Museo La Specola: da maggio a ottobre puoi esplorare l'antico Osservatorio Astronomico sotto le stelle. https://www.beniculturali.inaf.it/eventi/visite-serali-2026/",
@@ -64,6 +72,10 @@ export const POIS: Poi[] = [
       "Sali fino in cima al bastione e scatta una foto alla Rotonda (il grande serbatoio cilindrico) o a uno dei cancelli in ferro battuto in stile liberty.",
     expected_answer_or_validation:
       "Valida l'immagine se mostra una struttura cilindrica in cemento/pietra tipo torre-serbatoio, un cancello in ferro battuto in stile liberty, terrazze con fontane o mura cinquecentesche. Rifiuta selfie senza contesto, screenshot o luoghi chiaramente diversi.",
+    hints: [
+      "Sali le terrazze fino in cima al bastione: la Rotonda è il grande cilindro di cemento alto 36 metri, impossibile non vederla.",
+      "Se la foto non viene accettata, fai qualche passo indietro e inquadra tutta la torre, oppure un cancello in ferro battuto con le sue decorazioni.",
+    ],
     reward_xp: 100,
     recommended_activity:
       "🎬 In estate la sommità del bastione si trasforma in un cinema all'aperto. https://www.cuc-cinemauno.it/",
@@ -80,6 +92,11 @@ export const POIS: Poi[] = [
     challenge_text:
       "Trova la frase e risolvi l'enigma: 'Procul, o procul este profani!' (Lontani, restate lontani, o profani!). Qualcuno ha lasciato questo antico monito in questo luogo... ma per chi sa guardare, c'è una risposta che riporta la pace. Esplora il parco e cerca un'iscrizione nascosta tra le pietre per completare il messaggio.",
     expected_answer_or_validation: "FRATERNAE CONCORDIAE",
+    hints: [
+      "Attraversa i ponticelli e dirigiti verso il teatro antico: l'iscrizione è incisa nella pietra, lì vicino. Guarda bene in basso!",
+      "La risposta è in latino ed è fatta di due parole: la prima parla di fratelli, la seconda di armonia.",
+      "Comincia con FRATERNAE… ora ti manca solo la parola che significa “concordia”!",
+    ],
     reward_xp: 100,
     recommended_activity: null,
   },
@@ -88,7 +105,7 @@ export const POIS: Poi[] = [
     name: "Porta Portello",
     latitude: 45.40971,
     longitude: 11.89266,
-    geofence_radius_m: 100,
+    geofence_radius_m: 60,
     bot_context:
       "🚣 Benvenuto a Porta Portello, la porta d'acqua di Padova!\nRealizzata nel 1518 in magnifica pietra d'Istria, non era un semplice passaggio ma il porto principale della città. Da qui partivano e arrivavano i Burchielli, le tipiche imbarcazioni veneziane che viaggiavano lungo il canale Piovego verso la Laguna di Venezia.\nImmagina questo luogo nel '700: un andirivieni di barcaioli, nobili in viaggio, mercanti lungo gli argini.",
     challenge_type: "AUDIO",
@@ -97,6 +114,10 @@ export const POIS: Poi[] = [
     expected_answer_or_validation: "Ascolto completato",
     audio_narration:
       "Chiudi gli occhi. Sei seduto sui gradini di pietra d'Istria di Porta Portello, nel 1750. Ascolta. Lo sciabordio lento dell'acqua del canale Piovego contro gli scalini. Il cigolio dei remi di un Burchiello che si prepara a partire per Venezia. Le voci dei barcaioli che caricano casse di stoffe e vino. Una risata di nobili in viaggio, il rintocco lontano di una campana. Respira l'aria umida del fiume. Sei nel cuore pulsante del porto di Padova. Quando sei pronto, apri gli occhi e conferma l'ascolto.",
+    hints: [
+      "Cerca la scalinata di pietra bianca che scende verso il canale Piovego, proprio accanto all'arco della porta.",
+      "Se l'audio non parte, alza il volume e controlla la connessione: se proprio non va, potrai leggere il racconto e confermare.",
+    ],
     reward_xp: 100,
     recommended_activity:
       "🎬 In estate le storiche gradinate di Porta Portello ospitano il River Film Festival, con uno schermo galleggiante sull'acqua. https://riverfilmfestival.org/",
@@ -106,7 +127,7 @@ export const POIS: Poi[] = [
     name: "Parco Milcovich",
     latitude: 45.41899,
     longitude: 11.88846,
-    geofence_radius_m: 100,
+    geofence_radius_m: 200,
     bot_context:
       "Benvenuto al Parco Milcovich! Quasi 40.000 m² di verde, vero cuore dell'Arcella.\nUn tempo qui c'erano solo campi e fabbriche, oggi è un punto di ritrovo vivo per il quartiere, con orti condivisi, aree per lo sport e tantissimi alberi. Oltre a essere un posto perfetto per rilassarsi lontano dalla folla del centro, il parco gioca un ruolo fondamentale per rendere la città più fresca e sostenibile.",
     challenge_type: "TRIVIA",
@@ -117,6 +138,10 @@ export const POIS: Poi[] = [
       { key: "A", label: "Circa 1-2 °C" },
       { key: "B", label: "Fino a 4-8 °C" },
       { key: "C", label: "Non c'è alcuna differenza" },
+    ],
+    hints: [
+      "Gli alberi non fanno solo ombra: traspirano acqua e rinfrescano l'aria attorno a loro, come piccoli condizionatori naturali.",
+      "Pensa a quanto scotta l'asfalto in agosto: la differenza con l'ombra degli alberi è di parecchi gradi, non di uno o due.",
     ],
     reward_xp: 100,
     recommended_activity:
@@ -132,6 +157,7 @@ export type Mission = {
   title: string;
   emoji: string;
   badgeTitle: string;
+  badgeArt: string;
   description: string;
   poiIds: number[];
   finale: string;
@@ -140,6 +166,7 @@ export type Mission = {
 export const MISSIONS: Mission[] = [
   {
     id: "acqua",
+    badgeArt: "/art/badge-acqua.svg",
     badgeTitle: "Custode dell'Acqua",
     title: "Padova d'acqua",
     emoji: "💧",
@@ -151,6 +178,7 @@ export const MISSIONS: Mission[] = [
   },
   {
     id: "mura",
+    badgeArt: "/art/badge-mura.svg",
     badgeTitle: "Sentinella delle Mura",
     title: "Padova fortificata",
     emoji: "🏰",
@@ -162,6 +190,7 @@ export const MISSIONS: Mission[] = [
   },
   {
     id: "verde",
+    badgeArt: "/art/badge-verde.svg",
     badgeTitle: "Anima Verde",
     title: "Padova verde",
     emoji: "🌳",
@@ -177,31 +206,25 @@ export function missionsForPoi(poiId: number): Mission[] {
   return MISSIONS.filter((m) => m.poiIds.includes(poiId));
 }
 
+// Quattro badge: uno per ogni missione, con una grafica dedicata, e un badge finale
+// per chi completa tutte e tre le missioni (e quindi tutte e cinque le tappe).
+export const FINAL_BADGE_ID = "all-missions";
+
 export const BADGES: Badge[] = [
-  {
-    id: "first-step",
-    title: "Primo Passo",
-    description: "Sblocca la tua prima tappa consapevole.",
-    unlock: (v) => v.length >= 1,
-  },
-  {
-    id: "explorer",
-    title: "Esploratore Lento",
-    description: "Sblocca tre tappe del percorso.",
-    unlock: (v) => v.length >= 3,
-  },
-  {
-    id: "conscious",
-    title: "Padova Conscious",
-    description: "Completa tutte e cinque le tappe del percorso.",
-    unlock: (v) => v.length >= 5,
-  },
   ...MISSIONS.map((m) => ({
     id: `mission-${m.id}`,
     title: m.badgeTitle,
     description: `Completa la missione ${m.title}.`,
+    art: m.badgeArt,
     unlock: (v: number[]) => m.poiIds.every((id) => v.includes(id)),
   })),
+  {
+    id: FINAL_BADGE_ID,
+    title: "Esploratore Consapevole",
+    description: "Completa tutte e tre le missioni e visita tutti e cinque i luoghi.",
+    art: "/art/badge-finale.svg",
+    unlock: (v) => MISSIONS.every((m) => m.poiIds.every((id) => v.includes(id))),
+  },
 ];
 
 export function haversineMeters(
