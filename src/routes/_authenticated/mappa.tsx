@@ -19,6 +19,7 @@ import { MentorChatDialog } from "@/components/game/MentorChatDialog";
 import { AboutDialog, useAboutDialog } from "@/components/game/AboutDialog";
 import { GalileoAvatar, GalileoBubble, HintButton, useGalileoHints } from "@/components/game/Galileo";
 import { MissionPickerDialog, useMissionPicker } from "@/components/game/MissionPickerDialog";
+import { HuntChallenge } from "@/components/game/HuntChallenge";
 import { setStartingMission } from "@/lib/progress.functions";
 import portaPortelloAudio from "@/assets/porta-portello.wav.asset.json";
 
@@ -734,7 +735,7 @@ function ChallengePanel({
           <Sparkles className="size-4" />
         )}
         Sfida
-        {inRange && (
+        {inRange && !poi.hunt && (
           <span className="ml-auto normal-case tracking-normal">
             <HintButton onClick={hints.askHint} hasMore={hints.hasMore} />
           </span>
@@ -835,6 +836,8 @@ function ChallengePanel({
       {inRange && poi.challenge_type === "AUDIO" && (
         <AudioChallenge poi={poi} onComplete={onSuccess} />
       )}
+
+      {inRange && poi.challenge_type === "CACCIA" && <HuntChallenge poi={poi} onSuccess={onSuccess} />}
 
       {feedback && <p className="mt-3 text-sm italic text-muted-foreground">{feedback}</p>}
 

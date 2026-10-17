@@ -445,7 +445,7 @@ function ProfilePage() {
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold">{poi.name}</div>
                     <div className="text-[10px] text-muted-foreground">
-                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : "🧩 Quiz"}
+                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : poi.challenge_type === "CACCIA" ? "🔍 Caccia al dettaglio" : "🧩 Quiz"}
                     </div>
                   </div>
                 </Card>
@@ -473,7 +473,7 @@ function ProfilePage() {
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold">{poi.name}</div>
                     <div className="text-[10px] text-muted-foreground">
-                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : "🧩 Quiz"}
+                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : poi.challenge_type === "CACCIA" ? "🔍 Caccia al dettaglio" : "🧩 Quiz"}
                     </div>
                   </div>
                 </Card>

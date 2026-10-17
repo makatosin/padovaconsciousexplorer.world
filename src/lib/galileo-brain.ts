@@ -55,7 +55,7 @@ const GENERAL: Entry[] = [
   {
     keywords: ["sfida", "sbloccare", "sblocca", "geofence", "posizione", "gps", "vicino"],
     answer:
-      "Quando arrivi vicino a una tappa la sua sfida si sblocca da sola: può essere un quiz, una sequenza da riordinare o un racconto da ascoltare. Se ti blocchi, tocca la lampadina e ti darò un aiutino. 💡",
+      "Quando arrivi vicino a una tappa la sua sfida si sblocca da sola: può essere un quiz, una sequenza da riordinare o una caccia al dettaglio. Se ti blocchi, tocca la lampadina e ti darò un aiutino. 💡",
   },
   {
     keywords: ["acqua", "piovego", "fiume", "canale", "porto"],
