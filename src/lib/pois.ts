@@ -5,7 +5,7 @@ export type Poi = {
   longitude: number;
   geofence_radius_m: number;
   bot_context: string;
-  challenge_type: "TRIVIA" | "FOTO" | "AUDIO";
+  challenge_type: "TRIVIA" | "FOTO" | "AUDIO" | "CACCIA";
   challenge_text: string;
   expected_answer_or_validation: string;
   reward_xp: number;
@@ -16,6 +16,10 @@ export type Poi = {
     items: { key: string; label: string }[];
   };
   choices?: { key: string; label: string }[];
+  // Caccia al dettaglio: indizi da risolvere uno alla volta guardando il luogo dal vivo.
+  // Ogni passo ha le risposte accettate, un aiutino e la curiosità che Galileo racconta
+  // quando il dettaglio è trovato.
+  hunt?: { clue: string; answers: string[]; hint: string; found: string }[];
   // Aiutini di Galileo, dal più vago al più esplicito: compaiono con il pulsante
   // lampadina, dopo una risposta sbagliata o se la sfida resta aperta a lungo.
   hints: string[];
@@ -126,16 +130,31 @@ export const POIS: Poi[] = [
     geofence_radius_m: 60,
     bot_context:
       "🚣 Benvenuto a Porta Portello, la porta d'acqua di Padova!\nRealizzata nel 1518 in magnifica pietra d'Istria, non era un semplice passaggio ma il porto principale della città. Da qui partivano e arrivavano i Burchielli, le tipiche imbarcazioni veneziane che viaggiavano lungo il canale Piovego verso la Laguna di Venezia.\nImmagina questo luogo nel '700: un andirivieni di barcaioli, nobili in viaggio, mercanti lungo gli argini.",
-    challenge_type: "AUDIO",
+    challenge_type: "CACCIA",
     challenge_text:
-      "🎧 Esperienza sensoriale sonora. Mettiti comodo sui gradini della scalinata che scende verso l'acqua, indossa le cuffie, chiudi gli occhi e lasciati trasportare dalla traccia audio nel Settecento del porto padovano.",
-    expected_answer_or_validation: "Ascolto completato",
-    audio_narration:
-      "Chiudi gli occhi. Sei seduto sui gradini di pietra d'Istria di Porta Portello, nel 1750. Ascolta. Lo sciabordio lento dell'acqua del canale Piovego contro gli scalini. Il cigolio dei remi di un Burchiello che si prepara a partire per Venezia. Le voci dei barcaioli che caricano casse di stoffe e vino. Una risata di nobili in viaggio, il rintocco lontano di una campana. Respira l'aria umida del fiume. Sei nel cuore pulsante del porto di Padova. Quando sei pronto, apri gli occhi e conferma l'ascolto.",
-    hints: [
-      "Cerca la scalinata di pietra bianca che scende verso il canale Piovego, proprio accanto all'arco della porta.",
-      "Se l'audio non parte, alza il volume e controlla la connessione: se proprio non va, potrai leggere il racconto e confermare.",
+      "🔍 Caccia al dettaglio. Porta Portello nasconde particolari che quasi nessuno nota. Trova dal vivo i tre dettagli che ti indica Galileo e scrivi la risposta: si parte dal ponte sul canale.",
+    expected_answer_or_validation: "Caccia completata",
+    hunt: [
+      {
+        clue: "🕰️ Dal ponte alza lo sguardo alla torretta. L'orologio ha due giri di numeri: romani per le ore e arabi per i minuti. Qual è il numero arabo più alto?",
+        answers: ["60", "SESSANTA"],
+        hint: "Segui i numeri arabi sul bordo esterno, di cinque in cinque: l'ultimo sta proprio in cima, accanto al XII.",
+        found: "Esatto, 60! Un quadrante con i minuti scritti per esteso: io ho passato la vita a misurare il tempo con i pendoli, questo orologio lo approvo. ⏱️",
+      },
+      {
+        clue: "🔤 Sopra l'arco, due parole latine incise danno alla porta il suo nome ufficiale. Scrivi la prima.",
+        answers: ["OMNIVM", "OMNIUM"],
+        hint: "Le lettere sono tutte maiuscole. Occhio: i Romani scrivevano la U come una V.",
+        found: "OMNIVM SANCTORVM, cioè \"di Ognissanti\": il nome ufficiale è Porta Ognissanti. Portello, il \"porticciolo\", è il nome che le ha dato il porto sul Piovego.",
+      },
+      {
+        clue: "🚶 Ora attraversa l'arco ed entra in città: sei sul lato sud. Voltati verso la porta. Dal lato dell'acqua c'era una cosa che sul lato sud manca: che cosa?",
+        answers: ["OROLOGIO", "QUADRANTE"],
+        hint: "Alza lo sguardo alla torretta: da qui vedi la campana, ma non puoi sapere che ore sono.",
+        found: "Proprio così: l'orologio guarda solo verso il canale, verso chi arrivava in barca. Già che sei qui, osserva i due fregi ai lati dell'arco: in quello di destra due faccine ti fanno la smorfia dall'alto. 😄",
+      },
     ],
+    hints: [],
     reward_xp: 100,
     galileo_tip: {
       text: "D'estate su queste gradinate arriva il River Film Festival, con lo schermo che galleggia sull'acqua. Un cinema sul canale: nemmeno con il mio cannocchiale avrei visto tanto lontano! 🎬",
