@@ -9,8 +9,8 @@ import { Card } from "@/components/ui/card";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { MapPin, Locate, Sparkles, Camera, FlaskConical, Zap, Award, RefreshCw, Footprints, Headphones, Play, Pause, Check, ArrowUp, ArrowDown } from "lucide-react";
-import { POIS, BADGES, MISSIONS, haversineMeters, missionsForPoi, type Poi } from "@/lib/pois";
+import { MapPin, Locate, Sparkles, Camera, FlaskConical, Zap, Award, RefreshCw, Footprints, Headphones, Play, Pause, Check, ArrowUp, ArrowDown, ChevronDown } from "lucide-react";
+import { POIS, BADGES, MISSIONS, atPoi, formatDistance, haversineMeters, missionsForPoi, type Poi } from "@/lib/pois";
 import { useActiveProgress, useDemoMode, computeNewBadges } from "@/lib/demo-mode";
 import { validateTrivia } from "@/lib/game.functions";
 import { POI_SUGGESTIONS, answerAboutPoi } from "@/lib/galileo-brain";
@@ -164,7 +164,7 @@ function MapPage() {
       try {
         navigator.vibrate?.([200, 100, 200]);
       } catch {}
-      toast.success(`Sei arrivato a ${poi.name}!`, {
+      toast.success(`Eccoti ${atPoi(poi)}!`, {
         description: "La sfida è sbloccata.",
         duration: 8000,
         action: { label: "Apri", onClick: () => setActivePoiId(poi.id) },
@@ -175,7 +175,7 @@ function MapPage() {
           "Notification" in window &&
           Notification.permission === "granted"
         ) {
-          new Notification(`Sei arrivato a ${poi.name}!`, {
+          new Notification(`Eccoti ${atPoi(poi)}!`, {
             body: "Apri Padova Conscious Explorer: la sfida è sbloccata.",
             icon: "/icon-192.png",
             tag: `poi-${poi.id}`,
@@ -310,7 +310,7 @@ function MapPage() {
       });
       return;
     }
-    toast.success(`${poi.name} sbloccato!`, {
+    toast.success(`Tappa completata: ${poi.name}! ✅`, {
       description: newBadges.length
         ? `Badge sbloccato: ${newBadges.map((id) => BADGES.find((b) => b.id === id)?.title ?? id).join(", ")}`
         : undefined,
@@ -607,20 +607,28 @@ function PoiSheet({
             <MapPin className="size-5 text-accent" />
             {poi.name}
           </SheetTitle>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <span
               className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${
-                inRange ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
+                inRange ? "bg-green-100 font-semibold text-green-800" : "bg-muted text-muted-foreground"
               }`}
             >
-              {inRange ? "🟢 Nel geofence" : "🔒 Fuori dal raggio"}
+              {inRange
+                ? "📍 Sei qui"
+                : `🔒 Avvicinati${distance != null ? ` (${formatDistance(distance)})` : ""}`}
             </span>
-            {distance != null && (
-              <span>
-                {distance < 1000
-                  ? `${Math.round(distance)} m`
-                  : `${(distance / 1000).toFixed(1)} km`}
-              </span>
+            {!alreadyDone && (
+              <button
+                type="button"
+                onClick={() =>
+                  document
+                    .getElementById(`sfida-${poi.id}`)
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" })
+                }
+                className="ml-auto inline-flex items-center gap-0.5 rounded-full bg-accent px-2.5 py-1 text-[11px] font-semibold text-accent-foreground shadow-sm active:scale-95"
+              >
+                Vai alla sfida <ChevronDown className="size-3.5" />
+              </button>
             )}
           </div>
         </SheetHeader>
@@ -636,9 +644,14 @@ function PoiSheet({
               </span>
             ))}
           </div>
-          <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/90">
-            {poi.bot_context}
-          </p>
+          <div className="space-y-2.5 text-sm leading-relaxed text-foreground/90">
+            {poi.bot_context
+              .split("\n")
+              .filter((line) => line.trim())
+              .map((line, i) => (
+                <p key={i}>{line}</p>
+              ))}
+          </div>
 
           {alreadyDone && (
             <Card className="border-primary/40 bg-primary/5 p-3 text-sm">
@@ -708,7 +721,7 @@ function ChallengePanel({
   }, [photoUrl]);
 
   return (
-    <Card className="border-accent/40 bg-accent/5 p-4">
+    <Card id={`sfida-${poi.id}`} className="scroll-mt-4 border-accent/40 bg-accent/5 p-4">
       <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent">
         {poi.challenge_type === "FOTO" ? (
           <Camera className="size-4" />
@@ -999,7 +1012,7 @@ function MentorChat({ poi }: { poi: Poi }) {
       </div>
       <GalileoChat
         className="max-h-80"
-        intro={`Benvenuto a ${poi.name}! Sono Galileo: tocca una domanda qui sotto o scrivimi una curiosità su questo luogo. 🔭`}
+        intro={`Eccoti ${atPoi(poi)}! Sono Galileo: tocca una domanda qui sotto o scrivimi una curiosità su questo luogo. 🔭`}
         suggestions={POI_SUGGESTIONS}
         answer={(q) => answerAboutPoi(poi, q)}
       />
