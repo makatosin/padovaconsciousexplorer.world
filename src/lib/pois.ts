@@ -19,6 +19,9 @@ export type Poi = {
   // Aiutini di Galileo, dal più vago al più esplicito: compaiono con il pulsante
   // lampadina, dopo una risposta sbagliata o se la sfida resta aperta a lungo.
   hints: string[];
+  // A tappa completata Galileo consiglia, con un fumetto e dei link, un approfondimento
+  // o un evento del luogo (gli stessi di recommended_activity, detti a modo suo).
+  galileo_tip?: { text: string; links: { label: string; url: string }[] };
 };
 
 export type Badge = {
@@ -56,6 +59,10 @@ export const POIS: Poi[] = [
       "Ezzelino III visse nel Duecento, il parafulmine arrivò nel 1773 e le osservazioni si spostarono ad Asiago nel 1942. Il museo è la cosa più recente!",
     ],
     reward_xp: 100,
+    galileo_tip: {
+      text: "Ho un debole per questa torre, lo ammetto! Da maggio a ottobre il Museo La Specola apre anche di sera, per esplorare l'osservatorio sotto le stelle. Ai miei tempi il cannocchiale dovevo costruirmelo da solo: tu trovi già tutto pronto! 🔭",
+      links: [{ label: "Visite serali alla Specola", url: "https://www.beniculturali.inaf.it/eventi/visite-serali-2026/" }],
+    },
     recommended_activity:
       "🌌 Visite Serali al Museo La Specola: da maggio a ottobre puoi esplorare l'antico Osservatorio Astronomico sotto le stelle. https://www.beniculturali.inaf.it/eventi/visite-serali-2026/",
   },
@@ -67,16 +74,27 @@ export const POIS: Poi[] = [
     geofence_radius_m: 150,
     bot_context:
       "Un suggestivo parco a terrazze a ridosso delle mura cinquecentesche di Padova, dove natura, ingegneria e storia si fondono.\n🐈 La Leggenda della Gatta: sorge sul \"Bastione della Gatta\". Il nome nasce nel 1509, quando i padovani beffarono le truppe imperiali assedianti esponendo una gatta viva su una pertica.\n💧 Il Serbatoio Monumentale: al centro dell'area c'è \"La Rotonda\", un imponente serbatoio idrico cilindrico alto 36 metri completato nel 1925, uno dei primi esempi di cemento armato a Padova.\n🕯️ Un Luogo della Memoria: alla base riposa una cappella in memoria di 96 cittadini uccisi da una bomba nel 1916 proprio in questo luogo.\n🌺 Design Liberty e Déco: cinque terrazze con fontane, ninfee, aiuole geometriche e cancelli in ferro battuto.",
-    challenge_type: "FOTO",
+    challenge_type: "TRIVIA",
     challenge_text:
-      "Sali fino in cima al bastione e scatta una foto alla Rotonda (il grande serbatoio cilindrico) o a uno dei cancelli in ferro battuto in stile liberty.",
-    expected_answer_or_validation:
-      "Valida l'immagine se mostra una struttura cilindrica in cemento/pietra tipo torre-serbatoio, un cancello in ferro battuto in stile liberty, terrazze con fontane o mura cinquecentesche. Rifiuta selfie senza contesto, screenshot o luoghi chiaramente diversi.",
+      "🐈 La beffa del 1509. Sei sul Bastione della Gatta: durante l'assedio delle truppe imperiali, come si presero gioco del nemico i padovani, dando il nome a questo bastione?",
+    expected_answer_or_validation: "C",
+    choices: [
+      { key: "A", label: "Liberarono cento gatti nell'accampamento nemico" },
+      { key: "B", label: "Dipinsero una gatta gigante sulle mura" },
+      { key: "C", label: "Esposero una gatta viva su una pertica" },
+    ],
     hints: [
-      "Sali le terrazze fino in cima al bastione: la Rotonda è il grande cilindro di cemento alto 36 metri, impossibile non vederla.",
-      "Fai qualche passo indietro e inquadra tutta la torre, oppure un cancello in ferro battuto con le sue decorazioni: sarà la tua foto ricordo.",
+      "Il nome del bastione è già un indizio: la protagonista è una sola gatta, non un esercito di gatti.",
+      "I padovani la issarono in alto, ben visibile dal campo nemico, in cima a un lungo bastone.",
     ],
     reward_xp: 100,
+    galileo_tip: {
+      text: "Ben fatto! Se vuoi tutta la storia della beffa, te la racconta il sito delle Mura di Padova. E un consiglio da amico: d'estate torna qui di sera, perché in cima al bastione c'è il cinema all'aperto. Io guardavo le stelle, tu goditi un bel film! 🎬",
+      links: [
+        { label: "Il Bastione della Gatta", url: "https://www.muradipadova.it/le-mura-rinascimentali/i-bastioni/bastione-della-gatta" },
+        { label: "Cinema sul bastione", url: "https://www.cuc-cinemauno.it/" },
+      ],
+    },
     recommended_activity:
       "🎬 In estate la sommità del bastione si trasforma in un cinema all'aperto. https://www.cuc-cinemauno.it/",
   },
@@ -119,6 +137,10 @@ export const POIS: Poi[] = [
       "Se l'audio non parte, alza il volume e controlla la connessione: se proprio non va, potrai leggere il racconto e confermare.",
     ],
     reward_xp: 100,
+    galileo_tip: {
+      text: "D'estate su queste gradinate arriva il River Film Festival, con lo schermo che galleggia sull'acqua. Un cinema sul canale: nemmeno con il mio cannocchiale avrei visto tanto lontano! 🎬",
+      links: [{ label: "River Film Festival", url: "https://riverfilmfestival.org/" }],
+    },
     recommended_activity:
       "🎬 In estate le storiche gradinate di Porta Portello ospitano il River Film Festival, con uno schermo galleggiante sull'acqua. https://riverfilmfestival.org/",
   },
@@ -144,6 +166,10 @@ export const POIS: Poi[] = [
       "Pensa a quanto scotta l'asfalto in agosto: la differenza con l'ombra degli alberi è di parecchi gradi, non di uno o due.",
     ],
     reward_xp: 100,
+    galileo_tip: {
+      text: "Nella bella stagione questo parco si accende con Arcella Bella: musica dal vivo, cinema all'aperto, street food e mercatini. Se passi di sera, salutami le stelle! ✨",
+      links: [{ label: "Arcella Bella", url: "https://www.arcellabella.it/" }],
+    },
     recommended_activity:
       "🎨 Durante la bella stagione il parco si anima con Arcella Bella: musica dal vivo, cinema all'aperto, street food e mercatini. https://www.arcellabella.it/",
   },
