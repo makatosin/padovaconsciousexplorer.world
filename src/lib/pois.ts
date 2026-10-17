@@ -276,6 +276,19 @@ export function suggestMission(
   return suggestion;
 }
 
+// "alla Specola", "ai Giardini della Rotonda"…: per gli avvisi di arrivo in italiano corretto.
+const AT_POI: Record<number, string> = {
+  1: "alla Specola",
+  2: "ai Giardini della Rotonda",
+  3: "al Parco Treves",
+  4: "a Porta Portello",
+  5: "al Parco Milcovich",
+};
+
+export function atPoi(poi: Poi): string {
+  return AT_POI[poi.id] ?? `a ${poi.name}`;
+}
+
 export function formatDistance(m: number): string {
   if (m < 1000) return `${Math.max(10, Math.round(m / 10) * 10)} m`;
   return `${(m / 1000).toLocaleString("it-IT", { maximumFractionDigits: 1 })} km`;

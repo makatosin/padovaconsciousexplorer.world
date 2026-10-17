@@ -328,7 +328,7 @@ function ProfilePage() {
                   Progresso
                 </span>
                 <span className="text-sm font-bold text-primary">
-                  {earnedCount}/{BADGES.length} 🏅
+                  Badge {earnedCount}/{BADGES.length} 🏅
                 </span>
               </div>
               <ProgressBar value={pct} className="h-2" />
@@ -445,7 +445,7 @@ function ProfilePage() {
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold">{poi.name}</div>
                     <div className="text-[10px] text-muted-foreground">
-                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : "🧩 Trivia"}
+                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : "🧩 Quiz"}
                     </div>
                   </div>
                 </Card>
@@ -473,7 +473,7 @@ function ProfilePage() {
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold">{poi.name}</div>
                     <div className="text-[10px] text-muted-foreground">
-                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : "🧩 Trivia"}
+                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : "🧩 Quiz"}
                     </div>
                   </div>
                 </Card>
