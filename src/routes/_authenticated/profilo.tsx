@@ -496,7 +496,7 @@ function ProfilePage() {
         </div>
       )}
       <p className="px-4 pt-4 pb-2 text-center text-[10px] text-muted-foreground">
-        Versione 1.6 · 16/10/2026 · Galileo senza intelligenza artificiale
+        Versione 1.7 · 17/10/2026
       </p>
       </>
       )}
