@@ -19,8 +19,9 @@ export type Poi = {
   // Aiutini di Galileo, dal più vago al più esplicito: compaiono con il pulsante
   // lampadina, dopo una risposta sbagliata o se la sfida resta aperta a lungo.
   hints: string[];
-  // Dopo la sfida Galileo propone un approfondimento esterno, per chi vuole saperne di più.
-  learn_more?: { text: string; label: string; url: string };
+  // A tappa completata Galileo consiglia, con un fumetto e dei link, un approfondimento
+  // o un evento del luogo (gli stessi di recommended_activity, detti a modo suo).
+  galileo_tip?: { text: string; links: { label: string; url: string }[] };
 };
 
 export type Badge = {
@@ -58,6 +59,10 @@ export const POIS: Poi[] = [
       "Ezzelino III visse nel Duecento, il parafulmine arrivò nel 1773 e le osservazioni si spostarono ad Asiago nel 1942. Il museo è la cosa più recente!",
     ],
     reward_xp: 100,
+    galileo_tip: {
+      text: "Ho un debole per questa torre, lo ammetto! Da maggio a ottobre il Museo La Specola apre anche di sera, per esplorare l'osservatorio sotto le stelle. Ai miei tempi il cannocchiale dovevo costruirmelo da solo: tu trovi già tutto pronto! 🔭",
+      links: [{ label: "Visite serali alla Specola", url: "https://www.beniculturali.inaf.it/eventi/visite-serali-2026/" }],
+    },
     recommended_activity:
       "🌌 Visite Serali al Museo La Specola: da maggio a ottobre puoi esplorare l'antico Osservatorio Astronomico sotto le stelle. https://www.beniculturali.inaf.it/eventi/visite-serali-2026/",
   },
@@ -82,12 +87,14 @@ export const POIS: Poi[] = [
       "Il nome del bastione è già un indizio: la protagonista è una sola gatta, non un esercito di gatti.",
       "I padovani la issarono in alto, ben visibile dal campo nemico, in cima a un lungo bastone.",
     ],
-    learn_more: {
-      text: "Ben fatto! Vuoi scoprire tutta la storia della beffa e di questo bastione? Te la racconta il sito delle Mura di Padova.",
-      label: "Il Bastione della Gatta",
-      url: "https://www.muradipadova.it/le-mura-rinascimentali/i-bastioni/bastione-della-gatta",
-    },
     reward_xp: 100,
+    galileo_tip: {
+      text: "Ben fatto! Se vuoi tutta la storia della beffa, te la racconta il sito delle Mura di Padova. E un consiglio da amico: d'estate torna qui di sera, perché in cima al bastione c'è il cinema all'aperto. Io guardavo le stelle, tu goditi un bel film! 🎬",
+      links: [
+        { label: "Il Bastione della Gatta", url: "https://www.muradipadova.it/le-mura-rinascimentali/i-bastioni/bastione-della-gatta" },
+        { label: "Cinema sul bastione", url: "https://www.cuc-cinemauno.it/" },
+      ],
+    },
     recommended_activity:
       "🎬 In estate la sommità del bastione si trasforma in un cinema all'aperto. https://www.cuc-cinemauno.it/",
   },
@@ -130,6 +137,10 @@ export const POIS: Poi[] = [
       "Se l'audio non parte, alza il volume e controlla la connessione: se proprio non va, potrai leggere il racconto e confermare.",
     ],
     reward_xp: 100,
+    galileo_tip: {
+      text: "D'estate su queste gradinate arriva il River Film Festival, con lo schermo che galleggia sull'acqua. Un cinema sul canale: nemmeno con il mio cannocchiale avrei visto tanto lontano! 🎬",
+      links: [{ label: "River Film Festival", url: "https://riverfilmfestival.org/" }],
+    },
     recommended_activity:
       "🎬 In estate le storiche gradinate di Porta Portello ospitano il River Film Festival, con uno schermo galleggiante sull'acqua. https://riverfilmfestival.org/",
   },
@@ -155,6 +166,10 @@ export const POIS: Poi[] = [
       "Pensa a quanto scotta l'asfalto in agosto: la differenza con l'ombra degli alberi è di parecchi gradi, non di uno o due.",
     ],
     reward_xp: 100,
+    galileo_tip: {
+      text: "Nella bella stagione questo parco si accende con Arcella Bella: musica dal vivo, cinema all'aperto, street food e mercatini. Se passi di sera, salutami le stelle! ✨",
+      links: [{ label: "Arcella Bella", url: "https://www.arcellabella.it/" }],
+    },
     recommended_activity:
       "🎨 Durante la bella stagione il parco si anima con Arcella Bella: musica dal vivo, cinema all'aperto, street food e mercatini. https://www.arcellabella.it/",
   },

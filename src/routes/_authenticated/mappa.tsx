@@ -654,21 +654,16 @@ function PoiSheet({
           </div>
 
           {alreadyDone && (
-            <Card className="border-primary/40 bg-primary/5 p-3 text-sm">
-              ✅ Tappa già completata.{" "}
-              {poi.recommended_activity && (
-                <span className="mt-1 block text-xs text-muted-foreground">
-                  {poi.recommended_activity}
-                </span>
-              )}
+            <Card className="border-green-300 bg-green-50 p-3 text-sm font-medium text-green-800">
+              ✅ Tappa completata!
             </Card>
           )}
 
-          {alreadyDone && poi.learn_more && (
+          {alreadyDone && poi.galileo_tip && (
             <GalileoBubble
               title="Galileo ti consiglia"
-              text={poi.learn_more.text}
-              link={{ label: poi.learn_more.label, url: poi.learn_more.url }}
+              text={poi.galileo_tip.text}
+              links={poi.galileo_tip.links}
             />
           )}
 
