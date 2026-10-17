@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
 import { AVATARS } from "@/lib/avatars";
 import { z } from "zod";
 import { checkNicknameAvailable } from "@/lib/progress.functions";
@@ -25,11 +26,34 @@ const schema = z.object({
   avatarId: z.number().int().min(1).max(6).optional(),
 });
 
+// Gli errori di Supabase arrivano in inglese: li traduciamo per gli studenti.
+function authErrorMessage(err: unknown): string {
+  const e = err as { code?: string; message?: string } | null;
+  const code = e?.code ?? "";
+  const msg = (e?.message ?? "").toLowerCase();
+  if (code === "invalid_credentials" || msg.includes("invalid login credentials"))
+    return "Email o password errate.";
+  if (code === "user_already_exists" || msg.includes("already registered"))
+    return "Esiste già un account con questa email: accedi.";
+  if (code === "email_not_confirmed" || msg.includes("email not confirmed"))
+    return "Email non ancora confermata: apri il link che ti abbiamo inviato.";
+  if (code === "weak_password" || msg.includes("password should") || msg.includes("weak"))
+    return "Password troppo debole: usa almeno 6 caratteri e non una parola comune.";
+  if (code === "email_address_invalid" || msg.includes("invalid format") || msg.includes("email address"))
+    return "Email non valida.";
+  if (code.includes("rate_limit") || msg.includes("rate limit") || msg.includes("too many"))
+    return "Troppi tentativi: aspetta qualche minuto e riprova.";
+  if (msg.includes("failed to fetch") || msg.includes("network"))
+    return "Connessione assente: controlla internet e riprova.";
+  return "Qualcosa è andato storto. Riprova tra poco.";
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [nickname, setNickname] = useState("");
   const [avatarId, setAvatarId] = useState<number>(1);
   const [busy, setBusy] = useState(false);
@@ -51,6 +75,10 @@ function AuthPage() {
     });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0].message);
+      return;
+    }
+    if (mode === "signup" && parsed.data.password.length < 6) {
+      toast.error("La password deve avere almeno 6 caratteri.");
       return;
     }
     setBusy(true);
@@ -94,7 +122,7 @@ function AuthPage() {
       }
       navigate({ to: "/mappa", replace: true });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Errore");
+      toast.error(authErrorMessage(err));
     } finally {
       setBusy(false);
     }
@@ -178,14 +206,28 @@ function AuthPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="pw">Password</Label>
-              <Input
-                id="pw"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete={mode === "login" ? "current-password" : "new-password"}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="pw"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={mode === "login" ? "current-password" : "new-password"}
+                  className="pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Nascondi password" : "Mostra password"}
+                  className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+              {mode === "signup" && (
+                <p className="text-[11px] text-muted-foreground">Almeno 6 caratteri.</p>
+              )}
             </div>
             <Button type="submit" className="w-full" disabled={busy}>
               {busy ? "Attendere…" : mode === "login" ? "Accedi" : "Registrati"}
@@ -218,10 +260,6 @@ function AuthPage() {
             )}
           </div>
         </Card>
-
-        <p className="mt-4 text-center text-[11px] text-muted-foreground">
-          <Link to="/" className="hover:underline">← Torna alla home</Link>
-        </p>
       </div>
     </div>
   );

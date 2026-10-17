@@ -312,7 +312,7 @@ function ProfilePage() {
                   Progresso
                 </span>
                 <span className="text-sm font-bold text-primary">
-                  {earnedCount}/{BADGES.length} 🏅
+                  Badge {earnedCount}/{BADGES.length} 🏅
                 </span>
               </div>
               <ProgressBar value={pct} className="h-2" />
@@ -368,7 +368,7 @@ function ProfilePage() {
             const complete = done === m.poiIds.length;
             return (
               <li key={m.id}>
-                <Card className={`p-3 ${complete ? "border-primary/50 bg-primary/5" : ""}`}>
+                <Card className={`p-3 ${complete ? "border-green-300 bg-green-50" : ""}`}>
                   <div className="flex items-center gap-2">
                     <img
                       src={m.badgeArt}
@@ -394,7 +394,7 @@ function ProfilePage() {
                           key={id}
                           className={`rounded-full px-2 py-0.5 text-[10px] ${
                             visitedPoi
-                              ? "bg-primary/15 text-primary"
+                              ? "bg-green-100 font-semibold text-green-800 ring-1 ring-green-300"
                               : "bg-muted text-muted-foreground"
                           }`}
                         >
@@ -429,7 +429,7 @@ function ProfilePage() {
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold">{poi.name}</div>
                     <div className="text-[10px] text-muted-foreground">
-                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : "🧩 Trivia"}
+                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : "🧩 Quiz"}
                     </div>
                   </div>
                 </Card>
@@ -442,7 +442,7 @@ function ProfilePage() {
       {/* Visited */}
       <section className="px-4 pb-4">
         <h2 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          <CheckCircle2 className="size-3.5 text-primary" /> LUOGHI VISITATI ({visited.length})
+          <CheckCircle2 className="size-3.5 text-green-600" /> LUOGHI VISITATI ({visited.length})
         </h2>
         {visited.length === 0 ? (
           <Card className="p-3 text-center text-xs text-muted-foreground">
@@ -452,12 +452,12 @@ function ProfilePage() {
           <ul className="space-y-1.5">
             {visited.map((poi) => (
               <li key={poi.id}>
-                <Card className="flex items-center gap-2 p-2.5">
-                  <CheckCircle2 className="size-4 shrink-0 text-primary" />
+                <Card className="flex items-center gap-2 border-green-300 bg-green-50 p-2.5">
+                  <CheckCircle2 className="size-4 shrink-0 text-green-600" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold">{poi.name}</div>
                     <div className="text-[10px] text-muted-foreground">
-                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : "🧩 Trivia"}
+                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : "🧩 Quiz"}
                     </div>
                   </div>
                 </Card>

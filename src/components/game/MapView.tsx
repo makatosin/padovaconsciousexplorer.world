@@ -13,6 +13,14 @@ const DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
+// Tappa completata: segnaposto verde con la spunta, così si vede subito sulla mappa.
+const visitedIcon = L.divIcon({
+  className: "pce-visited-marker",
+  html: `<div style="width:30px;height:30px;border-radius:9999px;background:#16a34a;border:3px solid white;box-shadow:0 1px 6px rgb(0 0 0 / 0.35);display:grid;place-items:center;color:white;font-size:16px;font-weight:700;line-height:1">✓</div>`,
+  iconSize: [30, 30],
+  iconAnchor: [15, 15],
+});
+
 const userIcon = L.divIcon({
   className: "pce-user-marker",
   html: `<div style="width:20px;height:20px;border-radius:9999px;background:oklch(0.52 0.07 145);border:3px solid white;box-shadow:0 0 0 4px oklch(0.52 0.07 145 / 0.25)"></div>`,
@@ -67,14 +75,15 @@ export function MapView({
               center={[poi.latitude, poi.longitude]}
               radius={poi.geofence_radius_m}
               pathOptions={{
-                color: isVisited ? "oklch(0.52 0.07 145)" : "oklch(0.62 0.14 45)",
-                fillOpacity: inMission && !isVisited ? 0.25 : 0.12,
+                color: isVisited ? "#16a34a" : "oklch(0.62 0.14 45)",
+                fillOpacity: isVisited ? 0.3 : inMission ? 0.25 : 0.12,
                 weight: inMission ? 4 : 2,
                 dashArray: inMission && !isVisited ? "6 6" : undefined,
               }}
             />
             <Marker
               position={[poi.latitude, poi.longitude]}
+              {...(isVisited ? { icon: visitedIcon } : {})}
               eventHandlers={{ click: () => onPoiClick(poi.id) }}
             />
           </div>
