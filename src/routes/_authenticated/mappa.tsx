@@ -394,7 +394,7 @@ function MapPage() {
                       onClick={() => setActivePoiId(poi.id)}
                       className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[11px] transition ${
                         visited
-                          ? "bg-primary/10 text-primary line-through opacity-70"
+                          ? "bg-green-100 font-semibold text-green-800"
                           : inMission
                             ? "bg-accent/10 hover:bg-accent/20"
                             : "hover:bg-muted"
@@ -402,10 +402,11 @@ function MapPage() {
                     >
                       <span
                         className={`inline-block size-2 rounded-full ${
-                          visited ? "bg-primary" : "bg-accent"
+                          visited ? "bg-green-600" : "bg-accent"
                         }`}
                       />
                       <span className="truncate font-medium">{poi.name}</span>
+                      {visited && <Check className="ml-auto size-3 shrink-0 text-green-700" />}
                     </button>
                   </li>
                 );
