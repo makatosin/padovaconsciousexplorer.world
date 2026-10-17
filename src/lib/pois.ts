@@ -168,10 +168,10 @@ export const POIS: Poi[] = [
     reward_xp: 100,
     galileo_tip: {
       text: "Nella bella stagione questo parco si accende con Arcella Bella: musica dal vivo, cinema all'aperto, street food e mercatini. Se passi di sera, salutami le stelle! ✨",
-      links: [{ label: "Arcella Bella", url: "https://www.arcellabella.it/" }],
+      links: [{ label: "Arcella Bella", url: "https://www.arcellabella.com/" }],
     },
     recommended_activity:
-      "🎨 Durante la bella stagione il parco si anima con Arcella Bella: musica dal vivo, cinema all'aperto, street food e mercatini. https://www.arcellabella.it/",
+      "🎨 Durante la bella stagione il parco si anima con Arcella Bella: musica dal vivo, cinema all'aperto, street food e mercatini. https://www.arcellabella.com/",
   },
 ];
 
