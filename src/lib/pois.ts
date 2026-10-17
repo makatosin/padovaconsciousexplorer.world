@@ -19,6 +19,8 @@ export type Poi = {
   // Aiutini di Galileo, dal più vago al più esplicito: compaiono con il pulsante
   // lampadina, dopo una risposta sbagliata o se la sfida resta aperta a lungo.
   hints: string[];
+  // Dopo la sfida Galileo propone un approfondimento esterno, per chi vuole saperne di più.
+  learn_more?: { text: string; label: string; url: string };
 };
 
 export type Badge = {
@@ -80,6 +82,11 @@ export const POIS: Poi[] = [
       "Il nome del bastione è già un indizio: la protagonista è una sola gatta, non un esercito di gatti.",
       "I padovani la issarono in alto, ben visibile dal campo nemico, in cima a un lungo bastone.",
     ],
+    learn_more: {
+      text: "Ben fatto! Vuoi scoprire tutta la storia della beffa e di questo bastione? Te la racconta il sito delle Mura di Padova.",
+      label: "Il Bastione della Gatta",
+      url: "https://www.muradipadova.it/le-mura-rinascimentali/i-bastioni/bastione-della-gatta",
+    },
     reward_xp: 100,
     recommended_activity:
       "🎬 In estate la sommità del bastione si trasforma in un cinema all'aperto. https://www.cuc-cinemauno.it/",

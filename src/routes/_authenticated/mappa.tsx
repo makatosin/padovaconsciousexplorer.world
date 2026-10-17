@@ -664,6 +664,14 @@ function PoiSheet({
             </Card>
           )}
 
+          {alreadyDone && poi.learn_more && (
+            <GalileoBubble
+              title="Galileo ti consiglia"
+              text={poi.learn_more.text}
+              link={{ label: poi.learn_more.label, url: poi.learn_more.url }}
+            />
+          )}
+
           {!alreadyDone && (
             <ChallengePanel poi={poi} inRange={inRange} onSuccess={() => onComplete(poi)} />
           )}

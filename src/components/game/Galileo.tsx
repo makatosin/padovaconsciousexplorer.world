@@ -23,9 +23,13 @@ export function useTalking(trigger: unknown, ms = 2600) {
 export function GalileoBubble({
   text,
   onClose,
+  link,
+  title = `${GALILEO_NAME} ti suggerisce`,
 }: {
   text: string;
   onClose?: () => void;
+  link?: { label: string; url: string };
+  title?: string;
 }) {
   const talking = useTalking(text);
   return (
@@ -42,9 +46,19 @@ export function GalileoBubble({
       />
       <div className="relative flex-1 rounded-2xl rounded-bl-sm border border-amber-300 bg-amber-50 px-3 py-2 text-sm leading-snug text-amber-950 shadow-sm">
         <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-700">
-          {GALILEO_NAME} ti suggerisce
+          {title}
         </div>
         {text}
+        {link && (
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1.5 flex w-fit items-center gap-1 rounded-full bg-amber-200/70 px-2.5 py-1 text-xs font-semibold text-amber-900 hover:bg-amber-200"
+          >
+            🔗 {link.label} ↗
+          </a>
+        )}
         {onClose && (
           <button
             onClick={onClose}
