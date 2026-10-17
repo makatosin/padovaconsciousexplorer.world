@@ -126,15 +126,18 @@ export const POIS: Poi[] = [
     geofence_radius_m: 60,
     bot_context:
       "🚣 Benvenuto a Porta Portello, la porta d'acqua di Padova!\nRealizzata nel 1518 in magnifica pietra d'Istria, non era un semplice passaggio ma il porto principale della città. Da qui partivano e arrivavano i Burchielli, le tipiche imbarcazioni veneziane che viaggiavano lungo il canale Piovego verso la Laguna di Venezia.\nImmagina questo luogo nel '700: un andirivieni di barcaioli, nobili in viaggio, mercanti lungo gli argini.",
-    challenge_type: "AUDIO",
+    challenge_type: "TRIVIA",
     challenge_text:
-      "🎧 Esperienza sensoriale sonora. Mettiti comodo sui gradini della scalinata che scende verso l'acqua, indossa le cuffie, chiudi gli occhi e lasciati trasportare dalla traccia audio nel Settecento del porto padovano.",
-    expected_answer_or_validation: "Ascolto completato",
-    audio_narration:
-      "Chiudi gli occhi. Sei seduto sui gradini di pietra d'Istria di Porta Portello, nel 1750. Ascolta. Lo sciabordio lento dell'acqua del canale Piovego contro gli scalini. Il cigolio dei remi di un Burchiello che si prepara a partire per Venezia. Le voci dei barcaioli che caricano casse di stoffe e vino. Una risata di nobili in viaggio, il rintocco lontano di una campana. Respira l'aria umida del fiume. Sei nel cuore pulsante del porto di Padova. Quando sei pronto, apri gli occhi e conferma l'ascolto.",
+      "🐴 Il motore del Burchiello. Nel Settecento da questi gradini partivano i Burchielli, carichi di nobili, mercanti e casse di vino, diretti a Venezia lungo il Piovego e il Brenta. Ma senza vento e contro corrente, come facevano ad avanzare sul fiume?",
+    expected_answer_or_validation: "B",
+    choices: [
+      { key: "A", label: "Con grandi vele, aspettando il vento giusto" },
+      { key: "B", label: "Trainati da cavalli che camminavano sull'argine" },
+      { key: "C", label: "Spinti da una ruota a vapore" },
+    ],
     hints: [
-      "Cerca la scalinata di pietra bianca che scende verso il canale Piovego, proprio accanto all'arco della porta.",
-      "Se l'audio non parte, alza il volume e controlla la connessione: se proprio non va, potrai leggere il racconto e confermare.",
+      "Guarda gli argini del canale: lungo l'acqua correva un sentiero, l'alzaia, percorso da animali robusti.",
+      "Il vapore arriverà solo nell'Ottocento e il vento sul canale è capriccioso: serviva qualcuno a quattro zampe.",
     ],
     reward_xp: 100,
     galileo_tip: {
