@@ -20,12 +20,6 @@ const userIcon = L.divIcon({
   iconAnchor: [10, 10],
 });
 
-const walkerIcon = L.divIcon({
-  className: "pce-walker-marker",
-  html: `<div style="width:22px;height:22px;border-radius:9999px;background:oklch(0.62 0.14 45);border:3px solid white;box-shadow:0 0 0 6px oklch(0.62 0.14 45 / 0.25);display:grid;place-items:center;font-size:12px">🚶</div>`,
-  iconSize: [22, 22],
-  iconAnchor: [11, 11],
-});
 
 function Recenter({ center }: { center: [number, number] | null }) {
   const map = useMap();
@@ -40,14 +34,12 @@ export function MapView({
   onPoiClick,
   visited,
   recenterKey,
-  walkerPos,
   highlight = [],
 }: {
   userPos: { lat: number; lng: number } | null;
   onPoiClick: (poiId: number) => void;
   visited: number[];
   recenterKey: number;
-  walkerPos?: { lat: number; lng: number } | null;
   highlight?: number[];
 }) {
   const center = useMemo<[number, number]>(() => [45.4064, 11.8768], []);
@@ -89,7 +81,6 @@ export function MapView({
         );
       })}
       {userPos && <Marker position={[userPos.lat, userPos.lng]} icon={userIcon} />}
-      {walkerPos && <Marker position={[walkerPos.lat, walkerPos.lng]} icon={walkerIcon} />}
       <Recenter center={userPos ? [userPos.lat, userPos.lng] : null} key={recenterKey} />
     </MapContainer>
   );

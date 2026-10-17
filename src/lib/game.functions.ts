@@ -1,47 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { POIS } from "./pois";
 
-const DEMO_COOKIE = "pce_demo";
 
-function readCookie(name: string): string | undefined {
-  const header = getRequestHeader("cookie");
-  if (!header) return undefined;
-  for (const part of header.split(/;\s*/)) {
-    const eq = part.indexOf("=");
-    if (eq === -1) continue;
-    if (part.slice(0, eq) === name) return decodeURIComponent(part.slice(eq + 1));
-  }
-  return undefined;
-}
-
-function verifyDemoToken(token: string | undefined, secret: string): boolean {
-  if (!token) return false;
-  const idx = token.indexOf(".");
-  if (idx <= 0) return false;
-  const payload = token.slice(0, idx);
-  const sig = token.slice(idx + 1);
-  const expectedB64 = createHmac("sha256", secret)
-    .update(payload, "utf8")
-    .digest("base64")
-    .replace(/=+$/g, "")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_");
-  try {
-    const a = Buffer.from(sig);
-    const b = Buffer.from(expectedB64);
-    if (a.length !== b.length) return false;
-    if (!timingSafeEqual(a, b)) return false;
-  } catch {
-    return false;
-  }
-  const exp = Number(payload);
-  return Number.isFinite(exp) && exp > Date.now();
-}
-
-async function assertAuthorized(demoToken?: string): Promise<void> {
+async function assertAuthorized(): Promise<void> {
   const authHeader = getRequestHeader("authorization");
   if (authHeader?.startsWith("Bearer ")) {
     const token = authHeader.slice(7);
@@ -58,24 +21,18 @@ async function assertAuthorized(demoToken?: string): Promise<void> {
       }
     }
   }
-  const secret = process.env.DEMO_SESSION_SECRET;
-  if (secret) {
-    if (verifyDemoToken(readCookie(DEMO_COOKIE), secret)) return;
-    if (verifyDemoToken(demoToken, secret)) return;
-  }
   throw new Error("Unauthorized");
 }
 
 const ValidateTriviaInput = z.object({
   poiId: z.number(),
   answer: z.string().min(1).max(500),
-  demoToken: z.string().optional(),
 });
 
 export const validateTrivia = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => ValidateTriviaInput.parse(data))
   .handler(async ({ data }) => {
-    await assertAuthorized(data.demoToken);
+    await assertAuthorized();
     const poi = POIS.find((p) => p.id === data.poiId);
     if (!poi || poi.challenge_type !== "TRIVIA") {
       throw new Error("Sfida trivia non disponibile");

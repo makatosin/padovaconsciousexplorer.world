@@ -6,12 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { MapPin, Locate, Sparkles, Camera, FlaskConical, Zap, Award, RefreshCw, Footprints, Headphones, Play, Pause, Check, ArrowUp, ArrowDown } from "lucide-react";
+import { MapPin, Locate, Sparkles, Camera, Headphones, Play, Pause, Check, ArrowUp, ArrowDown } from "lucide-react";
 import { POIS, BADGES, MISSIONS, haversineMeters, missionsForPoi, type Poi } from "@/lib/pois";
-import { useActiveProgress, useDemoMode, computeNewBadges } from "@/lib/demo-mode";
+import { useActiveProgress, computeNewBadges } from "@/lib/game-progress";
 import { validateTrivia } from "@/lib/game.functions";
 import { POI_SUGGESTIONS, answerAboutPoi } from "@/lib/galileo-brain";
 import { GalileoChat } from "@/components/game/GalileoChat";
@@ -39,13 +38,6 @@ function geolocationErrorMessage(err: GeolocationPositionError): string {
   }
 }
 
-function getDemoToken(): string | undefined {
-  try {
-    return sessionStorage.getItem("pce-demo-token") ?? undefined;
-  } catch {
-    return undefined;
-  }
-}
 
 export const Route = createFileRoute("/_authenticated/mappa")({
   head: () => ({ meta: [{ title: "Mappa · Padova Conscious Explorer" }] }),
@@ -55,7 +47,6 @@ export const Route = createFileRoute("/_authenticated/mappa")({
 
 function MapPage() {
   const { progress, completePoi } = useActiveProgress();
-  const { demoActive, enterDemo, exitDemo, setDemoProgress, onBadgeUnlock } = useDemoMode();
   const [userPos, setUserPos] = useState<{ lat: number; lng: number; accuracy?: number } | null>(
     null,
   );
@@ -63,14 +54,11 @@ function MapPage() {
   const [recenterKey, setRecenterKey] = useState(0);
   const [tracking, setTracking] = useState(false);
   const [gpsDenied, setGpsDenied] = useState(false);
-  const [walkerPos, setWalkerPos] = useState<{ lat: number; lng: number } | null>(null);
   const [mentorOpen, setMentorOpen] = useState(false);
-  const [sandboxOpen, setSandboxOpen] = useState(false);
   const about = useAboutDialog();
   const missionPicker = useMissionPicker(about.open);
   const setMissionFn = useServerFn(setStartingMission);
   const activeMission = MISSIONS.find((m) => m.id === missionPicker.missionId) ?? null;
-  const walkTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const firstFixRef = useRef(true);
   const notifiedRef = useRef<Set<number>>(new Set());
 
@@ -92,8 +80,8 @@ function MapPage() {
     activePoi != null &&
     distance - tolerance <= activePoi.geofence_radius_m;
 
-  // Posizione sempre attiva mentre la mappa è aperta (non in modalità demo, dove ci si
-  // sposta con il teletrasporto). La posizione resta sul telefono e non viene salvata.
+  // Posizione sempre attiva mentre la mappa è aperta. La posizione resta sul telefono e
+  // non viene salvata.
   // Al primo accesso parte solo dopo la schermata "Perché queste tappe?", così il
   // permesso viene chiesto dopo averne spiegato il motivo.
   const locationAllowed = about.checked && !about.open;
@@ -103,7 +91,7 @@ function MapPage() {
   }, [locationAllowed]);
 
   useEffect(() => {
-    if (!locationStarted || demoActive || typeof navigator === "undefined" || !navigator.geolocation)
+    if (!locationStarted || typeof navigator === "undefined" || !navigator.geolocation)
       return;
     const id = navigator.geolocation.watchPosition(
       (pos) => {
@@ -124,13 +112,13 @@ function MapPage() {
       { enableHighAccuracy: true, maximumAge: 10000, timeout: 30000 },
     );
     return () => navigator.geolocation.clearWatch(id);
-  }, [demoActive, locationStarted]);
+  }, [locationStarted]);
 
   // Tocco su "Consenti la posizione e iniziamo": il permesso viene chiesto subito e una
   // prima posizione, anche approssimativa, basta per consigliare la missione più vicina.
   const requestLocationNow = () => {
     setLocationStarted(true);
-    if (demoActive || !navigator.geolocation) return;
+    if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setGpsDenied(false);
@@ -194,11 +182,11 @@ function MapPage() {
     toast.success(`Missione ${m.title}`, {
       description: next ? `Prossima tappa: ${next.name}.` : "Hai già completato tutte le sue tappe!",
     });
-    if (!demoActive) setMissionFn({ data: { missionId: m.id as "acqua" | "mura" | "verde" } }).catch(() => {});
+    setMissionFn({ data: { missionId: m.id as "acqua" | "mura" | "verde" } }).catch(() => {});
   };
 
   const refreshLocation = () => {
-    if (userPos && !demoActive) {
+    if (userPos) {
       setRecenterKey((k) => k + 1);
       return;
     }
@@ -242,60 +230,6 @@ function MapPage() {
     );
   };
 
-  const teleportTo = (poi: Poi) => {
-    setUserPos({ lat: poi.latitude, lng: poi.longitude });
-    setActivePoiId(poi.id);
-    setRecenterKey((k) => k + 1);
-    toast.success(`Demo: teletrasporto a ${poi.name}`);
-  };
-
-  const stopWalk = () => {
-    if (walkTimerRef.current) {
-      clearInterval(walkTimerRef.current);
-      walkTimerRef.current = null;
-    }
-    setWalkerPos(null);
-  };
-
-  useEffect(() => () => stopWalk(), []);
-
-  const simulateWalkTo = (poi: Poi) => {
-    stopWalk();
-    const start = userPos ?? { lat: 45.4064, lng: 11.8768 };
-    const target = { lat: poi.latitude, lng: poi.longitude };
-    const steps = 30;
-    let i = 0;
-    setWalkerPos(start);
-    setActivePoiId(poi.id);
-    setRecenterKey((k) => k + 1);
-    walkTimerRef.current = setInterval(() => {
-      i += 1;
-      const t = i / steps;
-      const lat = start.lat + (target.lat - start.lat) * t;
-      const lng = start.lng + (target.lng - start.lng) * t;
-      setWalkerPos({ lat, lng });
-      if (i >= steps) {
-        stopWalk();
-        setUserPos(target);
-        setRecenterKey((k) => k + 1);
-        toast.success(`Arrivato a ${poi.name}`);
-      }
-    }, 120);
-  };
-
-  const unlockAllBadges = () => {
-    const all = BADGES.map((b) => b.id);
-    setDemoProgress({ ...progress, badges_earned: all });
-    all.forEach(onBadgeUnlock);
-  };
-
-  const resetDemo = () => {
-    setDemoProgress({ total_xp: 0, visited_places: [], badges_earned: [] });
-    setUserPos(null);
-    setActivePoiId(null);
-    stopWalk();
-    toast.info("Demo azzerata");
-  };
 
   const handleComplete = async (poi: Poi) => {
     const currentVisited = progress.visited_places;
@@ -321,20 +255,6 @@ function MapPage() {
     <div className="relative h-full w-full overflow-hidden">
       <Toaster position="top-center" richColors />
 
-      {demoActive && (
-        <div className="absolute inset-x-0 top-0 z-[700] flex items-center justify-between gap-2 bg-accent px-3 py-1.5 text-[11px] font-medium text-accent-foreground shadow">
-          <span className="flex items-center gap-1.5">
-            <FlaskConical className="size-3.5" />
-            Modalità Demo · progressi non salvati
-          </span>
-          <button
-            onClick={exitDemo}
-            className="rounded-full bg-background/20 px-2 py-0.5 text-[10px] font-semibold hover:bg-background/30"
-          >
-            Esci
-          </button>
-        </div>
-      )}
 
       {/* Map full-bleed */}
       <div className="absolute inset-0">
@@ -345,7 +265,6 @@ function MapPage() {
               onPoiClick={setActivePoiId}
               visited={progress.visited_places}
               recenterKey={recenterKey}
-              walkerPos={walkerPos}
               highlight={activeMission?.poiIds ?? []}
             />
           </Suspense>
@@ -353,7 +272,7 @@ function MapPage() {
       </div>
 
       {/* Legenda: missione attiva e luoghi (in alto a destra) */}
-      <aside className={`pointer-events-none absolute right-2 z-[500] w-[200px] ${demoActive ? "top-10" : "top-2"}`}>
+      <aside className="pointer-events-none absolute right-2 top-2 z-[500] w-[200px]">
         <Card className="pointer-events-auto border-border/60 bg-card/95 p-2 shadow-md backdrop-blur">
           <button
             onClick={missionPicker.show}
@@ -412,11 +331,9 @@ function MapPage() {
               })}
           </ul>
           <div className="mt-1.5 border-t border-border/60 px-1 pt-1.5 text-[9px] text-muted-foreground">
-            {demoActive
-              ? "Demo: spostati con la Sandbox."
-              : gpsDenied
-                ? "📍 Posizione bloccata: attivala nelle impostazioni del browser."
-                : "📍 Posizione attiva solo a mappa aperta. Non viene salvata."}
+            {gpsDenied
+              ? "📍 Posizione bloccata: attivala nelle impostazioni del browser."
+              : "📍 Posizione attiva solo a mappa aperta. Non viene salvata."}
           </div>
           <button
             onClick={about.show}
@@ -448,42 +365,6 @@ function MapPage() {
         </span>
       </button>
 
-      {/* Sandbox / Demo entry (bottom-left) */}
-      <div className="absolute bottom-4 left-4 z-[500]">
-        {!demoActive ? (
-          <button
-            onClick={enterDemo}
-            className="flex items-center gap-1.5 rounded-full border border-border/60 bg-card/95 px-3 py-2 text-[11px] font-semibold shadow-md backdrop-blur hover:bg-accent hover:text-accent-foreground"
-          >
-            <FlaskConical className="size-3.5" />
-            Avvia Demo
-          </button>
-        ) : (
-          <Drawer open={sandboxOpen} onOpenChange={setSandboxOpen}>
-            <DrawerTrigger asChild>
-              <button className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-2 text-[11px] font-semibold text-accent-foreground shadow-md">
-                <FlaskConical className="size-3.5" />
-                Sandbox
-              </button>
-            </DrawerTrigger>
-            <DrawerContent className="z-[1200]">
-              <DrawerHeader>
-                <DrawerTitle className="flex items-center gap-2">
-                  <FlaskConical className="size-4 text-accent" />
-                  Sandbox Demo
-                </DrawerTitle>
-              </DrawerHeader>
-              <SandboxPanel
-                progress={progress}
-                onTeleport={(p) => { teleportTo(p); setSandboxOpen(false); }}
-                onWalk={(p) => { simulateWalkTo(p); setSandboxOpen(false); }}
-                onUnlockBadges={unlockAllBadges}
-                onReset={resetDemo}
-              />
-            </DrawerContent>
-          </Drawer>
-        )}
-      </div>
 
       <MentorChatDialog open={mentorOpen} onOpenChange={setMentorOpen} />
       <AboutDialog open={about.open} onOpenChange={about.onOpenChange} onStart={requestLocationNow} />
@@ -496,11 +377,9 @@ function MapPage() {
         location={
           userPos
             ? { state: "ok", lat: userPos.lat, lng: userPos.lng }
-            : demoActive
-              ? { state: "none" }
-              : gpsDenied
-                ? { state: "denied" }
-                : { state: "searching" }
+            : gpsDenied
+              ? { state: "denied" }
+              : { state: "searching" }
         }
       />
 
@@ -517,68 +396,6 @@ function MapPage() {
   );
 }
 
-function SandboxPanel({
-  progress,
-  onTeleport,
-  onWalk,
-  onUnlockBadges,
-  onReset,
-}: {
-  progress: { total_xp: number; visited_places: number[]; badges_earned: string[] };
-  onTeleport: (poi: Poi) => void;
-  onWalk: (poi: Poi) => void;
-  onUnlockBadges: () => void;
-  onReset: () => void;
-}) {
-  return (
-    <div className="space-y-5 px-4 pb-6">
-      <section>
-        <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-          Simula spostamento
-        </div>
-        <div className="space-y-2">
-          {POIS.map((poi) => {
-            const done = progress.visited_places.includes(poi.id);
-            return (
-              <div
-                key={poi.id}
-                className="flex items-center gap-2 rounded-xl border border-border/60 bg-card p-2"
-              >
-                <div className="flex-1 truncate text-sm font-medium">
-                  {done ? "✅ " : ""}{poi.name}
-                </div>
-                <Button size="sm" variant="outline" onClick={() => onWalk(poi)}>
-                  <Footprints className="mr-1 size-3.5" />
-                  Cammina
-                </Button>
-                <Button size="sm" onClick={() => onTeleport(poi)}>
-                  <Zap className="mr-1 size-3.5" />
-                  Teletrasporto
-                </Button>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={onUnlockBadges}>
-          <Award className="mr-2 size-4" />
-          Sblocca tutti i badge
-        </Button>
-        <Button variant="ghost" className="flex-1" onClick={onReset}>
-          <RefreshCw className="mr-2 size-4" />
-          Reset
-        </Button>
-      </section>
-
-      <p className="text-[10px] leading-relaxed text-muted-foreground">
-        In modalità demo i progressi non vengono salvati sul tuo account. Le
-        sfide AI (trivia e foto) e la chat con Galileo sono reali.
-      </p>
-    </div>
-  );
-}
 
 function PoiSheet({
   poi,
@@ -683,7 +500,7 @@ function ChallengePanel({
     setBusy(true);
     setFeedback(null);
     try {
-      const res = await triviaFn({ data: { poiId: poi.id, answer, demoToken: getDemoToken() } });
+      const res = await triviaFn({ data: { poiId: poi.id, answer } });
       setFeedback(res.feedback);
       if (res.valid) onSuccess();
       else hints.onWrongAnswer();
@@ -727,7 +544,7 @@ function ChallengePanel({
 
       {!inRange && (
         <div className="rounded-lg border border-dashed border-border bg-background/50 p-3 text-xs text-muted-foreground">
-          🔒 Avvicinati al luogo per sbloccare la sfida (o usa il pulsante Demo).
+          🔒 Avvicinati al luogo per sbloccare la sfida.
         </div>
       )}
 
@@ -757,7 +574,7 @@ function ChallengePanel({
                   setFeedback(null);
                   try {
                     const res = await triviaFn({
-                      data: { poiId: poi.id, answer: c.key, demoToken: getDemoToken() },
+                      data: { poiId: poi.id, answer: c.key },
                     });
                     setFeedback(res.feedback);
                     if (res.valid) onSuccess();

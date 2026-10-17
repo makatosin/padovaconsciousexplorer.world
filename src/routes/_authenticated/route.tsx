@@ -3,10 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Map, User, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { DemoModeProvider, useDemoMode } from "@/lib/demo-mode";
+import { GameProgressProvider } from "@/lib/game-progress";
 import { BadgeUnlockOverlay } from "@/components/game/BadgeUnlockOverlay";
-import { checkDemoSession, clearDemoSession } from "@/lib/demo-auth.functions";
-import { getDemoToken, clearDemoToken } from "@/lib/demo-token";
 import { useAppSession } from "@/lib/use-app-session";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -14,36 +12,16 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
     if (!error && data.user) return { user: data.user };
-    // No Supabase session — allow only if the server-verified demo cookie is present.
-    try {
-      const demoToken = getDemoToken();
-      const { ok } = await checkDemoSession({ data: { demoToken } });
-      if (ok) {
-        try {
-          sessionStorage.setItem("pce-demo", "1");
-        } catch {}
-        return { user: null };
-      }
-    } catch {}
-    let hadDemoFlag = false;
-    try {
-      hadDemoFlag = sessionStorage.getItem("pce-demo") === "1";
-      sessionStorage.removeItem("pce-demo");
-    } catch {}
-    clearDemoToken();
-    throw redirect({
-      to: "/auth",
-      search: hadDemoFlag ? { reason: "demo-expired" } : {},
-    });
+    throw redirect({ to: "/auth" });
   },
   component: AuthedLayout,
 });
 
 function AuthedLayout() {
   return (
-    <DemoModeProvider>
+    <GameProgressProvider>
       <AuthedLayoutInner />
-    </DemoModeProvider>
+    </GameProgressProvider>
   );
 }
 
@@ -51,19 +29,9 @@ function AuthedLayoutInner() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { demoActive, exitDemo } = useDemoMode();
-  useAppSession(!demoActive);
+  useAppSession(true);
 
   const signOut = async () => {
-    if (demoActive) {
-      try {
-        await clearDemoSession();
-      } catch {}
-      clearDemoToken();
-      exitDemo();
-      navigate({ to: "/auth", replace: true });
-      return;
-    }
     await qc.cancelQueries();
     qc.clear();
     await supabase.auth.signOut();
@@ -87,10 +55,10 @@ function AuthedLayoutInner() {
           <button
             onClick={signOut}
             className="relative flex flex-1 flex-col items-center justify-center gap-1 py-4 text-[12px] font-medium text-muted-foreground transition hover:text-foreground active:bg-muted/60"
-            aria-label={demoActive ? "Esci dalla demo" : "Esci"}
+            aria-label="Esci"
           >
             <LogOut className="size-6" />
-            <span>{demoActive ? "Esci demo" : "Esci"}</span>
+            <span>Esci</span>
           </button>
         </nav>
         <BadgeUnlockOverlay />

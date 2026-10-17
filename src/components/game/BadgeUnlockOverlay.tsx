@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { BADGES } from "@/lib/pois";
-import { useDemoMode } from "@/lib/demo-mode";
+import { useBadgeEvents } from "@/lib/game-progress";
 
 export function BadgeUnlockOverlay() {
-  const { registerBadgeListener } = useDemoMode();
+  const { registerBadgeListener } = useBadgeEvents();
   const [queue, setQueue] = useState<string[]>([]);
 
   useEffect(() => {
