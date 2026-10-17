@@ -132,7 +132,7 @@ export const POIS: Poi[] = [
       "🚣 Benvenuto a Porta Portello, la porta d'acqua di Padova!\nRealizzata nel 1518 in magnifica pietra d'Istria, non era un semplice passaggio ma il porto principale della città. Da qui partivano e arrivavano i Burchielli, le tipiche imbarcazioni veneziane che viaggiavano lungo il canale Piovego verso la Laguna di Venezia.\nImmagina questo luogo nel '700: un andirivieni di barcaioli, nobili in viaggio, mercanti lungo gli argini.",
     challenge_type: "CACCIA",
     challenge_text:
-      "🔍 Caccia al dettaglio. Porta Portello nasconde particolari che quasi nessuno nota. Trova dal vivo i quattro dettagli che ti indica Galileo e scrivi la risposta: si parte dal ponte sul canale.",
+      "🔍 Caccia al dettaglio. Porta Portello nasconde particolari che quasi nessuno nota. Trova dal vivo i tre dettagli che ti indica Galileo e scrivi la risposta: si parte dal ponte sul canale.",
     expected_answer_or_validation: "Caccia completata",
     hunt: [
       {
@@ -142,19 +142,13 @@ export const POIS: Poi[] = [
         found: "Esatto, 60! Un quadrante con i minuti scritti per esteso: io ho passato la vita a misurare il tempo con i pendoli, questo orologio lo approvo. ⏱️",
       },
       {
-        clue: "⚪ Sempre dal ponte, guarda il bordo del tetto sopra le colonne: ci sono delle grandi palle di pietra. Quante sono?",
-        answers: ["4", "QUATTRO"],
-        hint: "Contale da sinistra a destra lungo il cornicione: due da una parte della finestrella e due dall'altra.",
-        found: "Quattro! Sfere di pietra perfette: da astronomo non potevo non notarle. 🔭",
-      },
-      {
         clue: "🔤 Sopra l'arco, due parole latine incise danno alla porta il suo nome ufficiale. Scrivi la prima.",
         answers: ["OMNIVM", "OMNIUM"],
         hint: "Le lettere sono tutte maiuscole. Occhio: i Romani scrivevano la U come una V.",
         found: "OMNIVM SANCTORVM, cioè \"di Ognissanti\": il nome ufficiale è Porta Ognissanti. Portello, il \"porticciolo\", è il nome che le ha dato il porto sul Piovego.",
       },
       {
-        clue: "🚶 Ora attraversa l'arco, entra in città e voltati verso la porta. Dal lato dell'acqua c'era una cosa che da questo lato manca: che cosa?",
+        clue: "🚶 Ora attraversa l'arco ed entra in città: sei sul lato sud. Voltati verso la porta. Dal lato dell'acqua c'era una cosa che sul lato sud manca: che cosa?",
         answers: ["OROLOGIO", "QUADRANTE"],
         hint: "Alza lo sguardo alla torretta: da qui vedi la campana, ma non puoi sapere che ore sono.",
         found: "Proprio così: l'orologio guarda solo verso il canale, verso chi arrivava in barca. Già che sei qui, osserva i due fregi ai lati dell'arco: in quello di destra due faccine ti fanno la smorfia dall'alto. 😄",
