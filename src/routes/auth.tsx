@@ -7,21 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import { Eye, EyeOff, FlaskConical } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { AVATARS } from "@/lib/avatars";
 import { z } from "zod";
 import { checkNicknameAvailable } from "@/lib/progress.functions";
-import { verifyDemoPassword } from "@/lib/demo-auth.functions";
-import { setDemoToken } from "@/lib/demo-token";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { AlertCircle } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [{ title: "Accedi · Padova Conscious Explorer" }],
   }),
-  validateSearch: (s: Record<string, unknown>): { reason?: string } =>
-    typeof s.reason === "string" ? { reason: s.reason } : {},
   component: AuthPage,
 });
 
@@ -56,7 +50,6 @@ function authErrorMessage(err: unknown): string {
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { reason } = Route.useSearch();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -64,62 +57,13 @@ function AuthPage() {
   const [nickname, setNickname] = useState("");
   const [avatarId, setAvatarId] = useState<number>(1);
   const [busy, setBusy] = useState(false);
-  const [demoOpen, setDemoOpen] = useState(false);
-  const [demoPw, setDemoPw] = useState("");
-  const [demoBusy, setDemoBusy] = useState(false);
-  const [demoError, setDemoError] = useState<string | null>(null);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
-
-  const startDemo = () => {
-    setDemoError(null);
-    setDemoPw("");
-    setDemoOpen(true);
-  };
-
-  const submitDemo = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!demoPw) return;
-    setDemoBusy(true);
-    setDemoError(null);
-    try {
-      const { ok, demoToken } = await verifyDemoPassword({ data: { password: demoPw } });
-      if (!ok) {
-        const msg = "Password demo errata. Riprova.";
-        setDemoError(msg);
-        toast.error(msg);
-        setDemoBusy(false);
-        return;
-      }
-      try {
-        sessionStorage.setItem("pce-demo", "1");
-      } catch {}
-      if (demoToken) setDemoToken(demoToken);
-      setDemoOpen(false);
-      navigate({ to: "/mappa", replace: true });
-    } catch {
-      const msg = "Impossibile verificare la password ora. Riprova.";
-      setDemoError(msg);
-      toast.error(msg);
-    } finally {
-      setDemoBusy(false);
-    }
-  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/mappa", replace: true });
     });
   }, [navigate]);
-
-  useEffect(() => {
-    if (reason === "demo-expired") {
-      toast.error("Sessione demo scaduta", {
-        description: "Reinserisci la password per rientrare nella demo.",
-      });
-      // Clear the flag from the URL so it doesn't reappear on refresh.
-      navigate({ to: "/auth", replace: true, search: {} });
-    }
-  }, [reason, navigate]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -316,81 +260,7 @@ function AuthPage() {
             )}
           </div>
         </Card>
-
-        <div className="mt-6">
-          <div className="relative mb-3 flex items-center">
-            <div className="flex-1 border-t border-border/60" />
-            <span className="px-2 text-[10px] uppercase tracking-widest text-muted-foreground">
-              oppure
-            </span>
-            <div className="flex-1 border-t border-border/60" />
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={startDemo}
-          >
-            <FlaskConical className="mr-2 size-4" />
-            Prova la demo (senza account)
-          </Button>
-          <p className="mt-2 text-center text-[10px] text-muted-foreground">
-            Esplora l'app senza registrarti. I progressi non verranno salvati.
-          </p>
-        </div>
       </div>
-
-      <Dialog
-        open={demoOpen}
-        onOpenChange={(o) => {
-          setDemoOpen(o);
-          if (!o) {
-            setDemoPw("");
-            setDemoError(null);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Accesso demo</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={submitDemo} className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="demo-pw">Password demo</Label>
-              <Input
-                id="demo-pw"
-                type="password"
-                value={demoPw}
-                onChange={(e) => {
-                  setDemoPw(e.target.value);
-                  if (demoError) setDemoError(null);
-                }}
-                autoFocus
-                required
-                aria-invalid={demoError ? true : undefined}
-              />
-              {demoError ? (
-                <p
-                  role="alert"
-                  className="flex items-start gap-1.5 text-[12px] font-medium text-destructive"
-                >
-                  <AlertCircle className="mt-[1px] size-3.5 shrink-0" />
-                  <span>{demoError}</span>
-                </p>
-              ) : (
-                <p className="text-[11px] text-muted-foreground">
-                  La demo è riservata. Inserisci la password per continuare.
-                </p>
-              )}
-            </div>
-            <DialogFooter>
-              <Button type="submit" disabled={demoBusy || !demoPw} className="w-full">
-                {demoBusy ? "Verifica…" : "Entra in demo"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
