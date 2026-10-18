@@ -240,3 +240,10 @@
     animation: none !important;
   }
 }
+
+/* Mappa a toni tenui: i colori accesi di OpenStreetMap vengono smorzati e scaldati
+   verso il salvia e la sabbia dell'app, così tappe e percorsi risaltano di più.
+   Si applica solo allo sfondo (le tessere), non ai cerchi e ai segnaposto. */
+.leaflet-tile-pane {
+  filter: saturate(0.55) sepia(0.18) contrast(0.92) brightness(1.03);
+}
