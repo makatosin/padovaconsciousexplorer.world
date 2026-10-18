@@ -21,6 +21,7 @@ import { GalileoAvatar, GalileoBubble, HintButton, useGalileoHints } from "@/com
 import { MissionPickerDialog, useMissionPicker } from "@/components/game/MissionPickerDialog";
 import { HuntChallenge } from "@/components/game/HuntChallenge";
 import { LegendFold } from "@/components/game/LegendFold";
+import { directionsUrl, nextPoiAfter } from "@/lib/pois";
 import { setStartingMission } from "@/lib/progress.functions";
 import portaPortelloAudio from "@/assets/porta-portello.wav.asset.json";
 
@@ -517,6 +518,8 @@ function MapPage() {
         distance={distance}
         alreadyDone={activePoi ? progress.visited_places.includes(activePoi.id) : false}
         onComplete={handleComplete}
+        visited={progress.visited_places}
+        onOpenPoi={setActivePoiId}
       />
     </div>
   );
@@ -593,6 +596,8 @@ function PoiSheet({
   distance,
   alreadyDone,
   onComplete,
+  visited,
+  onOpenPoi,
 }: {
   poi: Poi | null;
   open: boolean;
@@ -601,8 +606,11 @@ function PoiSheet({
   distance: number | null;
   alreadyDone: boolean;
   onComplete: (poi: Poi) => void;
+  visited: number[];
+  onOpenPoi: (id: number) => void;
 }) {
   if (!poi) return null;
+  const next = alreadyDone ? nextPoiAfter(poi, visited) : null;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="z-[1000] h-[85vh] overflow-y-auto rounded-t-3xl p-0">
@@ -621,6 +629,16 @@ function PoiSheet({
                 ? "📍 Sei qui"
                 : `🔒 Avvicinati${distance != null ? ` (${formatDistance(distance)})` : ""}`}
             </span>
+            {!inRange && (
+              <a
+                href={directionsUrl(poi)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 rounded-full border border-accent/40 px-2.5 py-1 text-[11px] font-semibold text-accent active:scale-95"
+              >
+                🧭 Portami lì
+              </a>
+            )}
             {!alreadyDone && (
               <button
                 type="button"
@@ -669,6 +687,19 @@ function PoiSheet({
               text={poi.galileo_tip.text}
               links={poi.galileo_tip.links}
             />
+          )}
+
+          {next && (
+            <div className="space-y-2">
+              <GalileoBubble
+                title="Prossima tappa"
+                text={`${next.mission ? `La prossima tappa della missione ${next.mission.title} è ${next.poi.name}` : `La tappa più vicina che ti manca è ${next.poi.name}`}, a ${formatDistance(next.distance)} da qui. Andiamo? 🧭`}
+                links={[{ label: "Portami lì", url: directionsUrl(next.poi) }]}
+              />
+              <Button variant="outline" className="w-full" onClick={() => onOpenPoi(next.poi.id)}>
+                Apri la tappa {next.poi.name}
+              </Button>
+            </div>
           )}
 
           {!alreadyDone && (
