@@ -72,7 +72,7 @@ const GENERAL: Entry[] = [
   {
     keywords: ["curiosita", "sorprendimi", "qualcosa di interessante", "fatto strano"],
     answer:
-      "Lo sai che nel 1509 i padovani beffarono l'esercito che assediava la città esponendo una gatta viva su una pertica, sul bastione che oggi si chiama proprio “della Gatta”? Lo trovi ai Giardini della Rotonda! 🐈",
+      "Lo sai che ai Giardini della Rotonda c'è un serbatoio d'acqua alto 36 metri, finito nel 1925 e tra i primi in cemento armato di Padova? E il bastione su cui sorge nasconde una beffa del 1509 con protagonista una gatta: scoprila lì! 🐈",
   },
   ...POIS.map((p) => ({
     keywords: poiKeywords(p),
