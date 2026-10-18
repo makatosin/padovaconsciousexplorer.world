@@ -20,6 +20,7 @@ import { AboutDialog, useAboutDialog } from "@/components/game/AboutDialog";
 import { GalileoAvatar, GalileoBubble, HintButton, useGalileoHints } from "@/components/game/Galileo";
 import { MissionPickerDialog, useMissionPicker } from "@/components/game/MissionPickerDialog";
 import { HuntChallenge } from "@/components/game/HuntChallenge";
+import { LegendFold } from "@/components/game/LegendFold";
 import { setStartingMission } from "@/lib/progress.functions";
 import portaPortelloAudio from "@/assets/porta-portello.wav.asset.json";
 
@@ -379,6 +380,7 @@ function MapPage() {
               </>
             )}
           </button>
+          <LegendFold done={progress.visited_places.length} total={POIS.length}>
           <ul className="space-y-1">
             {[...POIS]
               .sort((a, b) => {
@@ -426,6 +428,7 @@ function MapPage() {
           >
             ℹ️ Perché queste tappe?
           </button>
+          </LegendFold>
         </Card>
       </aside>
 
