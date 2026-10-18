@@ -338,3 +338,24 @@ export function formatDistance(m: number): string {
   if (m < 1000) return `${Math.max(10, Math.round(m / 10) * 10)} m`;
   return `${(m / 1000).toLocaleString("it-IT", { maximumFractionDigits: 1 })} km`;
 }
+
+export type NextPoi = { poi: Poi; distance: number; mission: Mission | null };
+
+// Dopo una tappa completata: la più vicina tra quelle ancora da fare della stessa
+// missione, altrimenti la più vicina tra tutte le altre. Null se le ha fatte tutte.
+export function nextPoiAfter(current: Poi, visited: number[]): NextPoi | null {
+  const done = new Set([...visited, current.id]);
+  const nearest = (ids: number[]) =>
+    POIS.filter((p) => ids.includes(p.id) && !done.has(p.id))
+      .map((p) => ({
+        poi: p,
+        distance: haversineMeters(current.latitude, current.longitude, p.latitude, p.longitude),
+      }))
+      .sort((a, b) => a.distance - b.distance)[0];
+  for (const m of missionsForPoi(current.id)) {
+    const n = nearest(m.poiIds);
+    if (n) return { ...n, mission: m };
+  }
+  const n = nearest(POIS.map((p) => p.id));
+  return n ? { ...n, mission: null } : null;
+}
