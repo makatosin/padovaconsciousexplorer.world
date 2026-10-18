@@ -25,6 +25,7 @@ import { getMyProfile, updateMyProfile, checkNicknameAvailable } from "@/lib/pro
 import { AVATARS, getAvatar } from "@/lib/avatars";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { HomeScreenTip } from "@/components/game/HomeScreenTip";
 
 export const Route = createFileRoute("/_authenticated/profilo")({
   head: () => ({ meta: [{ title: "Profilo · Padova Conscious Explorer" }] }),
@@ -454,6 +455,8 @@ function ProfilePage() {
           </ul>
         )}
       </section>
+
+      <HomeScreenTip variant="profile" className="mx-4 mb-4" />
 
       {/* Visited */}
       <section className="px-4 pb-4">
