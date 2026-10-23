@@ -103,7 +103,7 @@ export function MissionPickerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="z-[1500] max-h-[85vh] max-w-md overflow-y-auto">
+      <DialogContent className="z-[1500] max-h-[85dvh] max-w-md overflow-y-auto">
         <DialogHeader className="text-left">
           <div className="mb-1 flex items-center gap-2">
             <GalileoAvatar className="size-11" />

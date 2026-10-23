@@ -112,10 +112,22 @@ function MapPage() {
     const id = navigator.geolocation.watchPosition(
       (pos) => {
         setGpsDenied(false);
-        setUserPos({
+        const next = {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
           accuracy: Math.round(pos.coords.accuracy),
+        };
+        // Anche da fermo il GPS "balla" di qualche metro a ogni lettura: il segnaposto si
+        // sposta solo se lo spostamento supera questo rumore (metà della precisione
+        // dichiarata, tra 6 e 20 m), altrimenti tremerebbe di continuo.
+        setUserPos((prev) => {
+          if (!prev) return next;
+          const moved = haversineMeters(prev.lat, prev.lng, next.lat, next.lng);
+          const noise = Math.min(Math.max(next.accuracy / 2, 6), 20);
+          if (moved >= noise) return next;
+          return Math.abs((prev.accuracy ?? next.accuracy) - next.accuracy) > 5
+            ? { ...prev, accuracy: next.accuracy }
+            : prev;
         });
         if (firstFixRef.current) {
           firstFixRef.current = false;
@@ -614,7 +626,7 @@ function PoiSheet({
   const next = alreadyDone ? nextPoiAfter(poi, visited) : null;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="z-[1000] h-[85vh] overflow-y-auto rounded-t-3xl p-0">
+      <SheetContent side="bottom" className="z-[1000] h-[85dvh] overflow-y-auto rounded-t-3xl p-0">
         <SheetHeader className="border-b border-border/60 p-4 text-left">
           <SheetTitle className="flex items-center gap-2 text-lg">
             <MapPin className="size-5 text-accent" />

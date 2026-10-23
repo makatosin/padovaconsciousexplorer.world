@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, type MutableRefObject } from "react";
 import { MapContainer, TileLayer, Marker, Circle, useMap } from "react-leaflet";
 import L from "leaflet";
 import { POIS } from "@/lib/pois";
@@ -35,11 +35,21 @@ const walkerIcon = L.divIcon({
   iconAnchor: [11, 11],
 });
 
-function Recenter({ center }: { center: [number, number] | null }) {
+// Centra la mappa sulla posizione solo quando lo chiede l'app (primo segnale GPS o pulsante
+// della posizione), non a ogni aggiornamento: così lo zoom scelto dall'utente resta com'è.
+function Recenter({
+  target,
+  trigger,
+}: {
+  target: MutableRefObject<[number, number] | null>;
+  trigger: number;
+}) {
   const map = useMap();
   useEffect(() => {
-    if (center) map.flyTo(center, 16, { duration: 0.8 });
-  }, [center, map]);
+    if (trigger > 0 && target.current) {
+      map.flyTo(target.current, Math.max(map.getZoom(), 16), { duration: 0.8 });
+    }
+  }, [trigger, map, target]);
   return null;
 }
 
@@ -99,7 +109,7 @@ export function MapView({
       })}
       {userPos && <Marker position={[userPos.lat, userPos.lng]} icon={userIcon} />}
       {walkerPos && <Marker position={[walkerPos.lat, walkerPos.lng]} icon={walkerIcon} />}
-      <Recenter center={userPos ? [userPos.lat, userPos.lng] : null} key={recenterKey} />
+      <Recenter target={flyTarget} trigger={recenterKey} />
     </MapContainer>
   );
 }

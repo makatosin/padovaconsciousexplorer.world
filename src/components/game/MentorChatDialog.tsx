@@ -14,7 +14,7 @@ export function MentorChatDialog({
   const [talking, setTalking] = useState(false);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="z-[1500] flex h-[85vh] max-w-md flex-col gap-0 p-0 sm:h-[80vh]">
+      <DialogContent className="z-[1500] flex h-[85dvh] max-w-md flex-col gap-0 p-0 sm:h-[80dvh]">
         <DialogHeader className="border-b border-border/60 p-4">
           <DialogTitle className="flex items-center gap-2 text-base">
             <GalileoAvatar className="size-12" talking={talking} />
