@@ -108,9 +108,16 @@ export const POIS: Poi[] = [
   {
     id: 3,
     name: "Parco Treves",
-    latitude: 45.40345,
-    longitude: 11.88463,
+    latitude: 45.402049,
+    longitude: 11.885258,
     geofence_radius_m: 100,
+    // Rettangolo che contiene i quattro punti estremi del parco rilevati sul posto
+    // (nord 45.402832, 11.885564; sud 45.401265, 11.885368; est 45.402433, 11.886243;
+    // ovest 45.402247, 11.884273).
+    geofence_box: [
+      [45.401265, 11.884273],
+      [45.402832, 11.886243],
+    ],
     bot_context:
       "Un angolo nascosto di Padova, ideale per godersi la città lontano dalla folla.\n🕰️ Le Origini: progettato tra il 1829 e il 1835 da Giuseppe Jappelli. Nato come orto botanico privato, è stato il primo parco padovano in stile romantico all'inglese.\n📍 Dove si trova: ingresso in via Bartolomeo d'Alviano, incastonato lungo le mura cinquecentesche.\n🌳 L'Atmosfera: labirinto di sentieri irregolari, saliscendi, ponticelli e viste inaspettate.\n✨ La Rinascita: quasi distrutto durante la Seconda Guerra Mondiale, restaurato tra il 1996 e il 2002.\n🏛️ Cosa vedere oggi: alberi rari, rose antiche, il Tempietto neoclassico e l'antica ghiacciaia.",
     challenge_type: "TRIVIA",
