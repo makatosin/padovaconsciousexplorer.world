@@ -4,6 +4,9 @@ export type Poi = {
   latitude: number;
   longitude: number;
   geofence_radius_m: number;
+  // Se presente, l'arrivo si riconosce dentro questo rettangolo (due angoli opposti,
+  // [lat, lng]) invece che nel cerchio: serve per i parchi dalla forma allungata.
+  geofence_box?: [[number, number], [number, number]];
   bot_context: string;
   challenge_type: "TRIVIA" | "FOTO" | "AUDIO" | "CACCIA";
   challenge_text: string;
@@ -115,7 +118,7 @@ export const POIS: Poi[] = [
       "Trova la frase e risolvi l'enigma: 'Procul, o procul este profani!' (Lontani, restate lontani, o profani!). Qualcuno ha lasciato questo antico monito in questo luogo... ma per chi sa guardare, c'è una risposta che riporta la pace. Esplora il parco e cerca un'iscrizione nascosta tra le pietre per completare il messaggio.",
     expected_answer_or_validation: "FRATERNAE CONCORDIAE",
     hints: [
-      "Attraversa i ponticelli e dirigiti verso il teatro antico: l'iscrizione è incisa nella pietra, lì vicino. Guarda bene in basso!",
+      "Attraversa uno dei due ponticelli e raggiungi il tempietto: lì vicino, tra due statue, c'è la stele monumentale con la risposta incisa nella pietra.",
       "La risposta è in latino ed è fatta di due parole: la prima parla di fratelli, la seconda di armonia.",
       "Comincia con FRATERNAE… ora ti manca solo la parola che significa “concordia”!",
     ],
@@ -287,6 +290,18 @@ export function haversineMeters(
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(a));
 }
+// Quanti metri mancano per entrare nell'area di una tappa (0 se si è già dentro): il bordo
+// del rettangolo per le tappe che lo hanno, altrimenti il bordo del cerchio.
+export function distanceToArea(poi: Poi, lat: number, lng: number): number {
+  if (poi.geofence_box) {
+    const [[a1, b1], [a2, b2]] = poi.geofence_box;
+    const clampedLat = Math.min(Math.max(lat, Math.min(a1, a2)), Math.max(a1, a2));
+    const clampedLng = Math.min(Math.max(lng, Math.min(b1, b2)), Math.max(b1, b2));
+    return haversineMeters(lat, lng, clampedLat, clampedLng);
+  }
+  return Math.max(0, haversineMeters(lat, lng, poi.latitude, poi.longitude) - poi.geofence_radius_m);
+}
+
 // Oltre questa distanza dalla tappa più vicina l'utente non è ancora a Padova e la
 // missione non viene consigliata.
 const FAR_FROM_PADOVA_M = 15_000;
