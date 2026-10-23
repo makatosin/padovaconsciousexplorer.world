@@ -4,6 +4,9 @@ export type Poi = {
   latitude: number;
   longitude: number;
   geofence_radius_m: number;
+  // Se presente, l'arrivo si riconosce dentro questo rettangolo (due angoli opposti,
+  // [lat, lng]) invece che nel cerchio: serve per i parchi dalla forma allungata.
+  geofence_box?: [[number, number], [number, number]];
   bot_context: string;
   challenge_type: "TRIVIA" | "FOTO" | "AUDIO" | "CACCIA";
   challenge_text: string;
@@ -105,9 +108,16 @@ export const POIS: Poi[] = [
   {
     id: 3,
     name: "Parco Treves",
-    latitude: 45.40345,
-    longitude: 11.88463,
+    latitude: 45.402049,
+    longitude: 11.885258,
     geofence_radius_m: 100,
+    // Rettangolo che contiene i quattro punti estremi del parco rilevati sul posto
+    // (nord 45.402832, 11.885564; sud 45.401265, 11.885368; est 45.402433, 11.886243;
+    // ovest 45.402247, 11.884273).
+    geofence_box: [
+      [45.401265, 11.884273],
+      [45.402832, 11.886243],
+    ],
     bot_context:
       "Un angolo nascosto di Padova, ideale per godersi la città lontano dalla folla.\n🕰️ Le Origini: progettato tra il 1829 e il 1835 da Giuseppe Jappelli. Nato come orto botanico privato, è stato il primo parco padovano in stile romantico all'inglese.\n📍 Dove si trova: ingresso in via Bartolomeo d'Alviano, incastonato lungo le mura cinquecentesche.\n🌳 L'Atmosfera: labirinto di sentieri irregolari, saliscendi, ponticelli e viste inaspettate.\n✨ La Rinascita: quasi distrutto durante la Seconda Guerra Mondiale, restaurato tra il 1996 e il 2002.\n🏛️ Cosa vedere oggi: alberi rari, rose antiche, il Tempietto neoclassico e l'antica ghiacciaia.",
     challenge_type: "TRIVIA",
@@ -115,7 +125,7 @@ export const POIS: Poi[] = [
       "Trova la frase e risolvi l'enigma: 'Procul, o procul este profani!' (Lontani, restate lontani, o profani!). Qualcuno ha lasciato questo antico monito in questo luogo... ma per chi sa guardare, c'è una risposta che riporta la pace. Esplora il parco e cerca un'iscrizione nascosta tra le pietre per completare il messaggio.",
     expected_answer_or_validation: "FRATERNAE CONCORDIAE",
     hints: [
-      "Attraversa i ponticelli e dirigiti verso il teatro antico: l'iscrizione è incisa nella pietra, lì vicino. Guarda bene in basso!",
+      "Attraversa uno dei due ponticelli e raggiungi il tempietto: lì vicino, tra due statue, c'è la stele monumentale con la risposta incisa nella pietra.",
       "La risposta è in latino ed è fatta di due parole: la prima parla di fratelli, la seconda di armonia.",
       "Comincia con FRATERNAE… ora ti manca solo la parola che significa “concordia”!",
     ],
@@ -287,6 +297,18 @@ export function haversineMeters(
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(a));
 }
+// Quanti metri mancano per entrare nell'area di una tappa (0 se si è già dentro): il bordo
+// del rettangolo per le tappe che lo hanno, altrimenti il bordo del cerchio.
+export function distanceToArea(poi: Poi, lat: number, lng: number): number {
+  if (poi.geofence_box) {
+    const [[a1, b1], [a2, b2]] = poi.geofence_box;
+    const clampedLat = Math.min(Math.max(lat, Math.min(a1, a2)), Math.max(a1, a2));
+    const clampedLng = Math.min(Math.max(lng, Math.min(b1, b2)), Math.max(b1, b2));
+    return haversineMeters(lat, lng, clampedLat, clampedLng);
+  }
+  return Math.max(0, haversineMeters(lat, lng, poi.latitude, poi.longitude) - poi.geofence_radius_m);
+}
+
 // Oltre questa distanza dalla tappa più vicina l'utente non è ancora a Padova e la
 // missione non viene consigliata.
 const FAR_FROM_PADOVA_M = 15_000;

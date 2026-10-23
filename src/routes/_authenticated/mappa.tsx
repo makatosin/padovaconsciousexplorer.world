@@ -10,7 +10,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from 
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { MapPin, Locate, Sparkles, Camera, FlaskConical, Zap, Award, RefreshCw, Footprints, Headphones, Play, Pause, Check, ArrowUp, ArrowDown, ChevronDown } from "lucide-react";
-import { POIS, BADGES, MISSIONS, atPoi, formatDistance, haversineMeters, missionsForPoi, type Poi } from "@/lib/pois";
+import { POIS, BADGES, MISSIONS, atPoi, distanceToArea, formatDistance, haversineMeters, missionsForPoi, type Poi } from "@/lib/pois";
 import { useActiveProgress, useDemoMode, computeNewBadges } from "@/lib/demo-mode";
 import { validateTrivia } from "@/lib/game.functions";
 import { POI_SUGGESTIONS, answerAboutPoi } from "@/lib/galileo-brain";
@@ -83,10 +83,9 @@ function MapPage() {
     [activePoiId],
   );
 
+  // Metri che mancano per entrare nell'area della tappa (0 se si è già dentro).
   const distance =
-    userPos && activePoi
-      ? haversineMeters(userPos.lat, userPos.lng, activePoi.latitude, activePoi.longitude)
-      : null;
+    userPos && activePoi ? distanceToArea(activePoi, userPos.lat, userPos.lng) : null;
 
   // Il GPS dello smartphone in centro storico sbaglia spesso di 20-50 m: si concede
   // all'utente il margine dichiarato dal dispositivo, fino a un massimo di 50 m.
@@ -94,7 +93,7 @@ function MapPage() {
   const inRange =
     distance != null &&
     activePoi != null &&
-    distance - tolerance <= activePoi.geofence_radius_m;
+    distance - tolerance <= 0;
 
   // Posizione sempre attiva mentre la mappa è aperta (non in modalità demo, dove ci si
   // sposta con il teletrasporto). La posizione resta sul telefono e non viene salvata.
@@ -174,8 +173,7 @@ function MapPage() {
     const tol = Math.min(userPos.accuracy ?? 0, MAX_GPS_TOLERANCE_M);
     for (const poi of POIS) {
       if (progress.visited_places.includes(poi.id) || notifiedRef.current.has(poi.id)) continue;
-      const d = haversineMeters(userPos.lat, userPos.lng, poi.latitude, poi.longitude);
-      if (d - tol > poi.geofence_radius_m) continue;
+      if (distanceToArea(poi, userPos.lat, userPos.lng) - tol > 0) continue;
       notifiedRef.current.add(poi.id);
       try {
         navigator.vibrate?.([200, 100, 200]);

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, type MutableRefObject } from "react";
-import { MapContainer, TileLayer, Marker, Circle, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Circle, Rectangle, useMap } from "react-leaflet";
 import L from "leaflet";
 import { POIS } from "@/lib/pois";
 
@@ -87,18 +87,19 @@ export function MapView({
       {POIS.map((poi) => {
         const isVisited = visited.includes(poi.id);
         const inMission = highlight.includes(poi.id);
+        const area = {
+          color: isVisited ? "#16a34a" : "oklch(0.62 0.14 45)",
+          fillOpacity: isVisited ? 0.3 : inMission ? 0.25 : 0.12,
+          weight: inMission ? 4 : 2,
+          dashArray: inMission && !isVisited ? "6 6" : undefined,
+        };
         return (
           <div key={poi.id}>
-            <Circle
-              center={[poi.latitude, poi.longitude]}
-              radius={poi.geofence_radius_m}
-              pathOptions={{
-                color: isVisited ? "#16a34a" : "oklch(0.62 0.14 45)",
-                fillOpacity: isVisited ? 0.3 : inMission ? 0.25 : 0.12,
-                weight: inMission ? 4 : 2,
-                dashArray: inMission && !isVisited ? "6 6" : undefined,
-              }}
-            />
+            {poi.geofence_box ? (
+              <Rectangle bounds={poi.geofence_box} pathOptions={area} />
+            ) : (
+              <Circle center={[poi.latitude, poi.longitude]} radius={poi.geofence_radius_m} pathOptions={area} />
+            )}
             <Marker
               position={[poi.latitude, poi.longitude]}
               {...(isVisited ? { icon: visitedIcon } : {})}
