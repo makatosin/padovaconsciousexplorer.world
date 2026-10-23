@@ -59,7 +59,7 @@ export function AboutDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="z-[1500] max-h-[85vh] max-w-md overflow-y-auto">
+      <DialogContent className="z-[1500] max-h-[85dvh] max-w-md overflow-y-auto">
         <DialogHeader className="text-left">
           <DialogTitle>Perché queste tappe?</DialogTitle>
           <DialogDescription>

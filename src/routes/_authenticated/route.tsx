@@ -75,21 +75,21 @@ function AuthedLayoutInner() {
   const isProfile = pathname === "/profilo";
 
   return (
-    <div className="relative flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground">
+    <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background text-foreground">
         <div className="min-h-0 flex-1 overflow-hidden">
           <Outlet />
         </div>
 
         {/* Bottom tab bar */}
-        <nav className="relative z-[600] flex min-h-[72px] items-stretch border-t border-border/60 bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
-          <TabLink to="/mappa" active={isMap} icon={<Map className="size-6" />} label="Mappa" />
-          <TabLink to="/profilo" active={isProfile} icon={<User className="size-6" />} label="Profilo" />
+        <nav className="relative z-[600] flex min-h-[60px] items-stretch border-t border-border/60 bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+          <TabLink to="/mappa" active={isMap} icon={<Map className="size-5" />} label="Mappa" />
+          <TabLink to="/profilo" active={isProfile} icon={<User className="size-5" />} label="Profilo" />
           <button
             onClick={signOut}
-            className="relative flex flex-1 flex-col items-center justify-center gap-1 py-4 text-[12px] font-medium text-muted-foreground transition hover:text-foreground active:bg-muted/60"
+            className="relative flex flex-1 flex-col items-center justify-center gap-0.5 py-2.5 text-[11px] font-medium text-muted-foreground transition hover:text-foreground active:bg-muted/60"
             aria-label={demoActive ? "Esci dalla demo" : "Esci"}
           >
-            <LogOut className="size-6" />
+            <LogOut className="size-5" />
             <span>{demoActive ? "Esci demo" : "Esci"}</span>
           </button>
         </nav>
@@ -112,7 +112,7 @@ function TabLink({
   return (
     <Link
       to={to}
-      className={`relative flex flex-1 flex-col items-center justify-center gap-1 py-4 text-[12px] font-medium transition active:bg-muted/60 ${
+      className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 py-2.5 text-[11px] font-medium transition active:bg-muted/60 ${
         active ? "text-primary" : "text-muted-foreground hover:text-foreground"
       }`}
     >
