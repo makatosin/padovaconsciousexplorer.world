@@ -76,8 +76,8 @@ export const POIS: Poi[] = [
   {
     id: 2,
     name: "Giardini della Rotonda",
-    latitude: 45.41671,
-    longitude: 11.87442,
+    latitude: 45.41624,
+    longitude: 11.87547,
     geofence_radius_m: 150,
     bot_context:
       "Un suggestivo parco a terrazze a ridosso delle mura cinquecentesche di Padova, dove natura, ingegneria e storia si fondono.\n🐈 La Leggenda della Gatta: sorge sul \"Bastione della Gatta\". Il nome nasce da una beffa del 1509 ai danni delle truppe imperiali che assediavano la città. Come andò? Lo scopri nella sfida qui sotto.\n💧 Il Serbatoio Monumentale: al centro dell'area c'è \"La Rotonda\", un imponente serbatoio idrico cilindrico alto 36 metri completato nel 1925, uno dei primi esempi di cemento armato a Padova.\n🕯️ Un Luogo della Memoria: alla base riposa una cappella in memoria di 96 cittadini uccisi da una bomba nel 1916 proprio in questo luogo.\n🌺 Design Liberty e Déco: cinque terrazze con fontane, ninfee, aiuole geometriche e cancelli in ferro battuto.",
@@ -176,8 +176,8 @@ export const POIS: Poi[] = [
   {
     id: 5,
     name: "Parco Milcovich",
-    latitude: 45.41899,
-    longitude: 11.88846,
+    latitude: 45.419661,
+    longitude: 11.890733,
     geofence_radius_m: 200,
     bot_context:
       "Benvenuto al Parco Milcovich! Quasi 40.000 m² di verde, vero cuore dell'Arcella.\nUn tempo qui c'erano solo campi e fabbriche, oggi è un punto di ritrovo vivo per il quartiere, con orti condivisi, aree per lo sport e tantissimi alberi. Oltre a essere un posto perfetto per rilassarsi lontano dalla folla del centro, il parco gioca un ruolo fondamentale per rendere la città più fresca e sostenibile.",
