@@ -356,6 +356,32 @@ export function atPoi(poi: Poi): string {
   return AT_POI[poi.id] ?? `a ${poi.name}`;
 }
 
+// "dalla Specola", "dai Giardini della Rotonda"…: per le distanze ("Sei a 800 m dalla Specola").
+const FROM_POI: Record<number, string> = {
+  1: "dalla Specola",
+  2: "dai Giardini della Rotonda",
+  3: "dal Parco Treves",
+  4: "da Porta Portello",
+  5: "dal Parco Milcovich",
+};
+
+export function fromPoi(poi: Poi): string {
+  return FROM_POI[poi.id] ?? `da ${poi.name}`;
+}
+
+// "la Specola", "i Giardini della Rotonda"…: il nome con l'articolo, dentro una frase.
+const THE_POI: Record<number, string> = {
+  1: "la Specola",
+  2: "i Giardini della Rotonda",
+  3: "il Parco Treves",
+  4: "Porta Portello",
+  5: "il Parco Milcovich",
+};
+
+export function thePoi(poi: Poi): string {
+  return THE_POI[poi.id] ?? poi.name;
+}
+
 export function formatDistance(m: number): string {
   if (m < 1000) return `${Math.max(10, Math.round(m / 10) * 10)} m`;
   return `${(m / 1000).toLocaleString("it-IT", { maximumFractionDigits: 1 })} km`;

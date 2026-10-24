@@ -6,7 +6,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { MISSIONS, POIS, formatDistance, suggestMission, type Mission } from "@/lib/pois";
+import {
+  MISSIONS,
+  POIS,
+  atPoi,
+  distanceToArea,
+  formatDistance,
+  fromPoi,
+  suggestMission,
+  type Mission,
+} from "@/lib/pois";
 import { GalileoAvatar } from "./Galileo";
 
 const MISSION_KEY = "pce-mission-v1";
@@ -95,9 +104,10 @@ export function MissionPickerDialog({
           ? `Sei a ${formatDistance(suggestion.distance)} dalla tappa più vicina: quando sarai a Padova ti consiglierò la missione più comoda.`
           : suggestion
             ? `${
-                suggestion.distance <= suggestion.poi.geofence_radius_m
-                  ? `Sei proprio a ${suggestion.poi.name}`
-                  : `Sei a ${formatDistance(suggestion.distance)} da ${suggestion.poi.name}`
+                location.state === "ok" &&
+                distanceToArea(suggestion.poi, location.lat, location.lng) === 0
+                  ? `Sei proprio ${atPoi(suggestion.poi)}`
+                  : `Sei a ${formatDistance(suggestion.distance)} ${fromPoi(suggestion.poi)}`
               }: ti consiglio di iniziare da ${suggestion.mission.title}!`
             : null;
 
