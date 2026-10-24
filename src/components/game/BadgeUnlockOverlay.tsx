@@ -26,8 +26,12 @@ export function BadgeUnlockOverlay() {
   const confetti = Array.from({ length: 18 });
 
   return (
+    // Il badge arriva quasi sempre con la scheda della tappa aperta, che blocca i tocchi sul
+    // resto della pagina: pointer-events-auto lo rende toccabile e data-badge-overlay dice
+    // alla scheda di non chiudersi quando lo si tocca.
     <div
-      className="fixed inset-0 z-[2000] flex items-center justify-center bg-background/70 backdrop-blur-sm animate-fade-in"
+      data-badge-overlay
+      className="pointer-events-auto fixed inset-0 z-[2000] flex items-center justify-center bg-background/70 backdrop-blur-sm animate-fade-in"
       onClick={() => setQueue((q) => q.slice(1))}
       role="alert"
       aria-live="assertive"

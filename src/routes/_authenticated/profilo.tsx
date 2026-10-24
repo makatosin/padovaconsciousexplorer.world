@@ -471,7 +471,7 @@ function ProfilePage() {
       </section>
 
       <p className="px-4 pt-4 pb-2 text-center text-[10px] text-muted-foreground">
-        Versione 1.11 · 24/10/2026
+        Versione 1.12 · 24/10/2026
       </p>
       </>
       )}

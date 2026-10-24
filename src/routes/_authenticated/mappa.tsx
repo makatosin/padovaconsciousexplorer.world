@@ -22,7 +22,7 @@ import { HuntChallenge } from "@/components/game/HuntChallenge";
 import { LegendFold } from "@/components/game/LegendFold";
 import { HomeScreenTip } from "@/components/game/HomeScreenTip";
 import { LocationBlockedTip } from "@/components/game/LocationBlockedTip";
-import { nextPoiAfter } from "@/lib/pois";
+import { nextPoiAfter, thePoi } from "@/lib/pois";
 import { setStartingMission } from "@/lib/progress.functions";
 import portaPortelloAudio from "@/assets/porta-portello.wav.asset.json";
 
@@ -254,8 +254,12 @@ function MapPage() {
     try {
       await completePoi(poi.id, poi.reward_xp, newBadges);
     } catch (e) {
+      // I messaggi del server sono in inglese: allo studente si dice solo cosa fare.
+      const expired = e instanceof Error && /unauthorized|jwt|token/i.test(e.message);
       toast.error("Sfida superata, ma non sono riuscito a salvare il progresso.", {
-        description: e instanceof Error ? e.message : "Controlla la connessione e riprova.",
+        description: expired
+          ? "La sessione è scaduta: tocca Esci, accedi di nuovo e ripeti la sfida."
+          : "Controlla la connessione e tocca di nuovo per salvare.",
       });
       return;
     }
@@ -444,7 +448,14 @@ function PoiSheet({
   const next = alreadyDone ? nextPoiAfter(poi, visited) : null;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="z-[1000] h-[85dvh] overflow-y-auto rounded-t-3xl p-0">
+      <SheetContent
+        side="bottom"
+        className="z-[1000] h-[85dvh] overflow-y-auto rounded-t-3xl p-0"
+        onInteractOutside={(e) => {
+          if ((e.target as Element | null)?.closest?.("[data-badge-overlay], [data-sonner-toaster]"))
+            e.preventDefault();
+        }}
+      >
         <SheetHeader className="border-b border-border/60 p-4 text-left">
           <SheetTitle className="flex items-center gap-2 text-lg">
             <MapPin className="size-5 text-accent" />
@@ -514,7 +525,7 @@ function PoiSheet({
             <div className="space-y-2">
               <GalileoBubble
                 title="Prossima tappa"
-                text={`${next.mission ? `La prossima tappa della missione ${next.mission.title} è ${next.poi.name}` : `La tappa più vicina che ti manca è ${next.poi.name}`}, a ${formatDistance(next.distance)} da qui. Ti va di proseguire? 🧭`}
+                text={`${next.mission ? `La prossima tappa della missione ${next.mission.title} è ${thePoi(next.poi)}` : `La tappa più vicina che ti manca è ${thePoi(next.poi)}`}, a ${formatDistance(next.distance)} da qui. Ti va di proseguire? 🧭`}
               />
               <Button variant="outline" className="w-full" onClick={() => onOpenPoi(next.poi.id)}>
                 Apri la tappa {next.poi.name}
@@ -562,7 +573,7 @@ function ChallengePanel({
       if (res.valid) onSuccess();
       else hints.onWrongAnswer();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Errore");
+      toast.error("Non riesco a verificare la risposta: controlla la connessione e riprova.");
     } finally {
       setBusy(false);
     }
@@ -637,7 +648,7 @@ function ChallengePanel({
                     if (res.valid) onSuccess();
                     else hints.onWrongAnswer();
                   } catch (e) {
-                    toast.error(e instanceof Error ? e.message : "Errore");
+                    toast.error("Non riesco a verificare la risposta: controlla la connessione e riprova.");
                   } finally {
                     setBusy(false);
                   }

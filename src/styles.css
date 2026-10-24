@@ -246,3 +246,9 @@
     animation: none !important;
   }
 }
+
+/* Con la scheda di una tappa aperta il resto della pagina non riceve tocchi: gli avvisi
+   (come "Eccoti al Parco Treves! Apri") devono restare toccabili lo stesso. */
+[data-sonner-toast] {
+  pointer-events: auto;
+}
