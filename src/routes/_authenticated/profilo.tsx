@@ -25,6 +25,7 @@ import { getMyProfile, updateMyProfile, checkNicknameAvailable } from "@/lib/pro
 import { AVATARS, getAvatar } from "@/lib/avatars";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { HomeScreenTip } from "@/components/game/HomeScreenTip";
 
 export const Route = createFileRoute("/_authenticated/profilo")({
   head: () => ({ meta: [{ title: "Profilo · Padova Conscious Explorer" }] }),
@@ -429,7 +430,7 @@ function ProfilePage() {
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold">{poi.name}</div>
                     <div className="text-[10px] text-muted-foreground">
-                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : "🧩 Quiz"}
+                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : poi.challenge_type === "CACCIA" ? "🔍 Caccia al dettaglio" : "🧩 Quiz"}
                     </div>
                   </div>
                 </Card>
@@ -438,6 +439,8 @@ function ProfilePage() {
           </ul>
         )}
       </section>
+
+      <HomeScreenTip variant="profile" className="mx-4 mb-4" />
 
       {/* Visited */}
       <section className="px-4 pb-4">
@@ -457,7 +460,7 @@ function ProfilePage() {
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold">{poi.name}</div>
                     <div className="text-[10px] text-muted-foreground">
-                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : "🧩 Quiz"}
+                      {poi.challenge_type === "FOTO" ? "📸 Foto" : poi.challenge_type === "AUDIO" ? "🔊 Audio" : poi.challenge_type === "CACCIA" ? "🔍 Caccia al dettaglio" : "🧩 Quiz"}
                     </div>
                   </div>
                 </Card>
@@ -468,7 +471,7 @@ function ProfilePage() {
       </section>
 
       <p className="px-4 pt-4 pb-2 text-center text-[10px] text-muted-foreground">
-        Versione 1.7 · 17/10/2026
+        Versione 1.11 · 24/10/2026
       </p>
       </>
       )}

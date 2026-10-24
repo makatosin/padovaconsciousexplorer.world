@@ -59,7 +59,7 @@ export function AboutDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="z-[1500] max-h-[85vh] max-w-md overflow-y-auto">
+      <DialogContent className="z-[1500] max-h-[85dvh] max-w-md overflow-y-auto">
         <DialogHeader className="text-left">
           <DialogTitle>Perché queste tappe?</DialogTitle>
           <DialogDescription>
@@ -99,8 +99,8 @@ export function AboutDialog({
             <p>
               Salviamo solo il tuo profilo (email, soprannome, avatar), la missione che scegli, i
               punti, le tappe completate con data e ora, i badge e il tempo che passi nell'app.
-              Servono alla ricerca e sono analizzati in forma aggregata. Le foto delle sfide e le
-              domande a Galileo restano sul telefono: l'app non usa servizi di intelligenza
+              Servono alla ricerca e sono analizzati in forma aggregata. Le domande a Galileo
+              restano sul telefono: l'app non usa servizi di intelligenza
               artificiale e le risposte di Galileo sono scritte in anticipo.
             </p>
           </div>

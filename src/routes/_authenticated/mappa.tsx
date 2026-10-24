@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { MapPin, Locate, Sparkles, Camera, Headphones, Play, Pause, Check, ArrowUp, ArrowDown, ChevronDown } from "lucide-react";
-import { POIS, BADGES, MISSIONS, atPoi, formatDistance, haversineMeters, missionsForPoi, type Poi } from "@/lib/pois";
+import { POIS, BADGES, MISSIONS, atPoi, distanceToArea, formatDistance, haversineMeters, missionsForPoi, type Poi } from "@/lib/pois";
 import { useActiveProgress, computeNewBadges } from "@/lib/game-progress";
 import { validateTrivia } from "@/lib/game.functions";
 import { POI_SUGGESTIONS, answerAboutPoi } from "@/lib/galileo-brain";
@@ -18,6 +18,10 @@ import { MentorChatDialog } from "@/components/game/MentorChatDialog";
 import { AboutDialog, useAboutDialog } from "@/components/game/AboutDialog";
 import { GalileoAvatar, GalileoBubble, HintButton, useGalileoHints } from "@/components/game/Galileo";
 import { MissionPickerDialog, useMissionPicker } from "@/components/game/MissionPickerDialog";
+import { HuntChallenge } from "@/components/game/HuntChallenge";
+import { LegendFold } from "@/components/game/LegendFold";
+import { HomeScreenTip } from "@/components/game/HomeScreenTip";
+import { nextPoiAfter } from "@/lib/pois";
 import { setStartingMission } from "@/lib/progress.functions";
 import portaPortelloAudio from "@/assets/porta-portello.wav.asset.json";
 
@@ -67,10 +71,9 @@ function MapPage() {
     [activePoiId],
   );
 
+  // Metri che mancano per entrare nell'area della tappa (0 se si è già dentro).
   const distance =
-    userPos && activePoi
-      ? haversineMeters(userPos.lat, userPos.lng, activePoi.latitude, activePoi.longitude)
-      : null;
+    userPos && activePoi ? distanceToArea(activePoi, userPos.lat, userPos.lng) : null;
 
   // Il GPS dello smartphone in centro storico sbaglia spesso di 20-50 m: si concede
   // all'utente il margine dichiarato dal dispositivo, fino a un massimo di 50 m.
@@ -78,7 +81,7 @@ function MapPage() {
   const inRange =
     distance != null &&
     activePoi != null &&
-    distance - tolerance <= activePoi.geofence_radius_m;
+    distance - tolerance <= 0;
 
   // Posizione sempre attiva mentre la mappa è aperta. La posizione resta sul telefono e
   // non viene salvata.
@@ -96,10 +99,22 @@ function MapPage() {
     const id = navigator.geolocation.watchPosition(
       (pos) => {
         setGpsDenied(false);
-        setUserPos({
+        const next = {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
           accuracy: Math.round(pos.coords.accuracy),
+        };
+        // Anche da fermo il GPS "balla" di qualche metro a ogni lettura: il segnaposto si
+        // sposta solo se lo spostamento supera questo rumore (metà della precisione
+        // dichiarata, tra 6 e 20 m), altrimenti tremerebbe di continuo.
+        setUserPos((prev) => {
+          if (!prev) return next;
+          const moved = haversineMeters(prev.lat, prev.lng, next.lat, next.lng);
+          const noise = Math.min(Math.max(next.accuracy / 2, 6), 20);
+          if (moved >= noise) return next;
+          return Math.abs((prev.accuracy ?? next.accuracy) - next.accuracy) > 5
+            ? { ...prev, accuracy: next.accuracy }
+            : prev;
         });
         if (firstFixRef.current) {
           firstFixRef.current = false;
@@ -146,8 +161,7 @@ function MapPage() {
     const tol = Math.min(userPos.accuracy ?? 0, MAX_GPS_TOLERANCE_M);
     for (const poi of POIS) {
       if (progress.visited_places.includes(poi.id) || notifiedRef.current.has(poi.id)) continue;
-      const d = haversineMeters(userPos.lat, userPos.lng, poi.latitude, poi.longitude);
-      if (d - tol > poi.geofence_radius_m) continue;
+      if (distanceToArea(poi, userPos.lat, userPos.lng) - tol > 0) continue;
       notifiedRef.current.add(poi.id);
       try {
         navigator.vibrate?.([200, 100, 200]);
@@ -297,6 +311,7 @@ function MapPage() {
               </>
             )}
           </button>
+          <LegendFold done={progress.visited_places.length} total={POIS.length}>
           <ul className="space-y-1">
             {[...POIS]
               .sort((a, b) => {
@@ -342,6 +357,7 @@ function MapPage() {
           >
             ℹ️ Perché queste tappe?
           </button>
+          </LegendFold>
         </Card>
       </aside>
 
@@ -392,6 +408,8 @@ function MapPage() {
         distance={distance}
         alreadyDone={activePoi ? progress.visited_places.includes(activePoi.id) : false}
         onComplete={handleComplete}
+        visited={progress.visited_places}
+        onOpenPoi={setActivePoiId}
       />
     </div>
   );
@@ -406,6 +424,8 @@ function PoiSheet({
   distance,
   alreadyDone,
   onComplete,
+  visited,
+  onOpenPoi,
 }: {
   poi: Poi | null;
   open: boolean;
@@ -414,11 +434,14 @@ function PoiSheet({
   distance: number | null;
   alreadyDone: boolean;
   onComplete: (poi: Poi) => void;
+  visited: number[];
+  onOpenPoi: (id: number) => void;
 }) {
   if (!poi) return null;
+  const next = alreadyDone ? nextPoiAfter(poi, visited) : null;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="z-[1000] h-[85vh] overflow-y-auto rounded-t-3xl p-0">
+      <SheetContent side="bottom" className="z-[1000] h-[85dvh] overflow-y-auto rounded-t-3xl p-0">
         <SheetHeader className="border-b border-border/60 p-4 text-left">
           <SheetTitle className="flex items-center gap-2 text-lg">
             <MapPin className="size-5 text-accent" />
@@ -471,15 +494,32 @@ function PoiSheet({
           </div>
 
           {alreadyDone && (
-            <Card className="border-primary/40 bg-primary/5 p-3 text-sm">
-              ✅ Tappa già completata.{" "}
-              {poi.recommended_activity && (
-                <span className="mt-1 block text-xs text-muted-foreground">
-                  {poi.recommended_activity}
-                </span>
-              )}
+            <Card className="border-green-300 bg-green-50 p-3 text-sm font-medium text-green-800">
+              ✅ Tappa completata!
             </Card>
           )}
+
+          {alreadyDone && poi.galileo_tip && (
+            <GalileoBubble
+              title="Galileo ti consiglia"
+              text={poi.galileo_tip.text}
+              links={poi.galileo_tip.links}
+            />
+          )}
+
+          {next && (
+            <div className="space-y-2">
+              <GalileoBubble
+                title="Prossima tappa"
+                text={`${next.mission ? `La prossima tappa della missione ${next.mission.title} è ${next.poi.name}` : `La tappa più vicina che ti manca è ${next.poi.name}`}, a ${formatDistance(next.distance)} da qui. Ti va di proseguire? 🧭`}
+              />
+              <Button variant="outline" className="w-full" onClick={() => onOpenPoi(next.poi.id)}>
+                Apri la tappa {next.poi.name}
+              </Button>
+            </div>
+          )}
+
+          {alreadyDone && <HomeScreenTip variant="tip" />}
 
           {!alreadyDone && (
             <ChallengePanel poi={poi} inRange={inRange} onSuccess={() => onComplete(poi)} />
@@ -548,7 +588,7 @@ function ChallengePanel({
           <Sparkles className="size-4" />
         )}
         Sfida
-        {inRange && (
+        {inRange && !poi.hunt && (
           <span className="ml-auto normal-case tracking-normal">
             <HintButton onClick={hints.askHint} hasMore={hints.hasMore} />
           </span>
@@ -649,6 +689,8 @@ function ChallengePanel({
       {inRange && poi.challenge_type === "AUDIO" && (
         <AudioChallenge poi={poi} onComplete={onSuccess} />
       )}
+
+      {inRange && poi.challenge_type === "CACCIA" && <HuntChallenge poi={poi} onSuccess={onSuccess} />}
 
       {feedback && <p className="mt-3 text-sm italic text-muted-foreground">{feedback}</p>}
 

@@ -4,8 +4,11 @@ export type Poi = {
   latitude: number;
   longitude: number;
   geofence_radius_m: number;
+  // Se presente, l'arrivo si riconosce dentro questo rettangolo (due angoli opposti,
+  // [lat, lng]) invece che nel cerchio: serve per i parchi dalla forma allungata.
+  geofence_box?: [[number, number], [number, number]];
   bot_context: string;
-  challenge_type: "TRIVIA" | "FOTO" | "AUDIO";
+  challenge_type: "TRIVIA" | "FOTO" | "AUDIO" | "CACCIA";
   challenge_text: string;
   expected_answer_or_validation: string;
   reward_xp: number;
@@ -16,9 +19,16 @@ export type Poi = {
     items: { key: string; label: string }[];
   };
   choices?: { key: string; label: string }[];
+  // Caccia al dettaglio: indizi da risolvere uno alla volta guardando il luogo dal vivo.
+  // Ogni passo ha le risposte accettate, un aiutino e la curiosità che Galileo racconta
+  // quando il dettaglio è trovato.
+  hunt?: { clue: string; answers: string[]; hint: string; found: string }[];
   // Aiutini di Galileo, dal più vago al più esplicito: compaiono con il pulsante
   // lampadina, dopo una risposta sbagliata o se la sfida resta aperta a lungo.
   hints: string[];
+  // A tappa completata Galileo consiglia, con un fumetto e dei link, un approfondimento
+  // o un evento del luogo (gli stessi di recommended_activity, detti a modo suo).
+  galileo_tip?: { text: string; links: { label: string; url: string }[] };
 };
 
 export type Badge = {
@@ -56,36 +66,58 @@ export const POIS: Poi[] = [
       "Ezzelino III visse nel Duecento, il parafulmine arrivò nel 1773 e le osservazioni si spostarono ad Asiago nel 1942. Il museo è la cosa più recente!",
     ],
     reward_xp: 100,
+    galileo_tip: {
+      text: "Ho un debole per questa torre, lo ammetto! Da maggio a ottobre il Museo La Specola apre anche di sera, per esplorare l'osservatorio sotto le stelle. Ai miei tempi il cannocchiale dovevo costruirmelo da solo: tu trovi già tutto pronto! 🔭",
+      links: [{ label: "Visite serali alla Specola", url: "https://www.beniculturali.inaf.it/eventi/visite-serali-2026/" }],
+    },
     recommended_activity:
       "🌌 Visite Serali al Museo La Specola: da maggio a ottobre puoi esplorare l'antico Osservatorio Astronomico sotto le stelle. https://www.beniculturali.inaf.it/eventi/visite-serali-2026/",
   },
   {
     id: 2,
     name: "Giardini della Rotonda",
-    latitude: 45.41671,
-    longitude: 11.87442,
+    latitude: 45.41624,
+    longitude: 11.87547,
     geofence_radius_m: 150,
     bot_context:
-      "Un suggestivo parco a terrazze a ridosso delle mura cinquecentesche di Padova, dove natura, ingegneria e storia si fondono.\n🐈 La Leggenda della Gatta: sorge sul \"Bastione della Gatta\". Il nome nasce nel 1509, quando i padovani beffarono le truppe imperiali assedianti esponendo una gatta viva su una pertica.\n💧 Il Serbatoio Monumentale: al centro dell'area c'è \"La Rotonda\", un imponente serbatoio idrico cilindrico alto 36 metri completato nel 1925, uno dei primi esempi di cemento armato a Padova.\n🕯️ Un Luogo della Memoria: alla base riposa una cappella in memoria di 96 cittadini uccisi da una bomba nel 1916 proprio in questo luogo.\n🌺 Design Liberty e Déco: cinque terrazze con fontane, ninfee, aiuole geometriche e cancelli in ferro battuto.",
-    challenge_type: "FOTO",
+      "Un suggestivo parco a terrazze a ridosso delle mura cinquecentesche di Padova, dove natura, ingegneria e storia si fondono.\n🐈 La Leggenda della Gatta: sorge sul \"Bastione della Gatta\". Il nome nasce da una beffa del 1509 ai danni delle truppe imperiali che assediavano la città. Come andò? Lo scopri nella sfida qui sotto.\n💧 Il Serbatoio Monumentale: al centro dell'area c'è \"La Rotonda\", un imponente serbatoio idrico cilindrico alto 36 metri completato nel 1925, uno dei primi esempi di cemento armato a Padova.\n🕯️ Un Luogo della Memoria: alla base riposa una cappella in memoria di 96 cittadini uccisi da una bomba nel 1916 proprio in questo luogo.\n🌺 Design Liberty e Déco: cinque terrazze con fontane, ninfee, aiuole geometriche e cancelli in ferro battuto.",
+    challenge_type: "TRIVIA",
     challenge_text:
-      "Sali fino in cima al bastione e scatta una foto alla Rotonda (il grande serbatoio cilindrico) o a uno dei cancelli in ferro battuto in stile liberty.",
-    expected_answer_or_validation:
-      "Valida l'immagine se mostra una struttura cilindrica in cemento/pietra tipo torre-serbatoio, un cancello in ferro battuto in stile liberty, terrazze con fontane o mura cinquecentesche. Rifiuta selfie senza contesto, screenshot o luoghi chiaramente diversi.",
+      "🐈 La beffa del 1509. Sei sul Bastione della Gatta: durante l'assedio delle truppe imperiali, come si presero gioco del nemico i padovani, dando il nome a questo bastione?",
+    expected_answer_or_validation: "C",
+    choices: [
+      { key: "A", label: "Liberarono cento gatti nell'accampamento nemico" },
+      { key: "B", label: "Dipinsero una gatta gigante sulle mura" },
+      { key: "C", label: "Esposero una gatta viva su una pertica" },
+    ],
     hints: [
-      "Sali le terrazze fino in cima al bastione: la Rotonda è il grande cilindro di cemento alto 36 metri, impossibile non vederla.",
-      "Fai qualche passo indietro e inquadra tutta la torre, oppure un cancello in ferro battuto con le sue decorazioni: sarà la tua foto ricordo.",
+      "Il nome del bastione è già un indizio: la protagonista è una sola gatta, non un esercito di gatti.",
+      "I padovani la issarono in alto, ben visibile dal campo nemico, in cima a un lungo bastone.",
     ],
     reward_xp: 100,
+    galileo_tip: {
+      text: "Ben fatto! Se vuoi tutta la storia della beffa, te la racconta il sito delle Mura di Padova. E un consiglio da amico: d'estate torna qui di sera, perché in cima al bastione c'è il cinema all'aperto. Io guardavo le stelle, tu goditi un bel film! 🎬",
+      links: [
+        { label: "Il Bastione della Gatta", url: "https://www.muradipadova.it/le-mura-rinascimentali/i-bastioni/bastione-della-gatta" },
+        { label: "Cinema sul bastione", url: "https://www.cuc-cinemauno.it/" },
+      ],
+    },
     recommended_activity:
       "🎬 In estate la sommità del bastione si trasforma in un cinema all'aperto. https://www.cuc-cinemauno.it/",
   },
   {
     id: 3,
     name: "Parco Treves",
-    latitude: 45.40345,
-    longitude: 11.88463,
+    latitude: 45.402049,
+    longitude: 11.885258,
     geofence_radius_m: 100,
+    // Rettangolo che contiene i quattro punti estremi del parco rilevati sul posto
+    // (nord 45.402832, 11.885564; sud 45.401265, 11.885368; est 45.402433, 11.886243;
+    // ovest 45.402247, 11.884273).
+    geofence_box: [
+      [45.401265, 11.884273],
+      [45.402832, 11.886243],
+    ],
     bot_context:
       "Un angolo nascosto di Padova, ideale per godersi la città lontano dalla folla.\n🕰️ Le Origini: progettato tra il 1829 e il 1835 da Giuseppe Jappelli. Nato come orto botanico privato, è stato il primo parco padovano in stile romantico all'inglese.\n📍 Dove si trova: ingresso in via Bartolomeo d'Alviano, incastonato lungo le mura cinquecentesche.\n🌳 L'Atmosfera: labirinto di sentieri irregolari, saliscendi, ponticelli e viste inaspettate.\n✨ La Rinascita: quasi distrutto durante la Seconda Guerra Mondiale, restaurato tra il 1996 e il 2002.\n🏛️ Cosa vedere oggi: alberi rari, rose antiche, il Tempietto neoclassico e l'antica ghiacciaia.",
     challenge_type: "TRIVIA",
@@ -93,7 +125,7 @@ export const POIS: Poi[] = [
       "Trova la frase e risolvi l'enigma: 'Procul, o procul este profani!' (Lontani, restate lontani, o profani!). Qualcuno ha lasciato questo antico monito in questo luogo... ma per chi sa guardare, c'è una risposta che riporta la pace. Esplora il parco e cerca un'iscrizione nascosta tra le pietre per completare il messaggio.",
     expected_answer_or_validation: "FRATERNAE CONCORDIAE",
     hints: [
-      "Attraversa i ponticelli e dirigiti verso il teatro antico: l'iscrizione è incisa nella pietra, lì vicino. Guarda bene in basso!",
+      "Attraversa uno dei due ponticelli e raggiungi il tempietto: lì vicino, tra due statue, c'è la stele monumentale con la risposta incisa nella pietra.",
       "La risposta è in latino ed è fatta di due parole: la prima parla di fratelli, la seconda di armonia.",
       "Comincia con FRATERNAE… ora ti manca solo la parola che significa “concordia”!",
     ],
@@ -108,25 +140,44 @@ export const POIS: Poi[] = [
     geofence_radius_m: 60,
     bot_context:
       "🚣 Benvenuto a Porta Portello, la porta d'acqua di Padova!\nRealizzata nel 1518 in magnifica pietra d'Istria, non era un semplice passaggio ma il porto principale della città. Da qui partivano e arrivavano i Burchielli, le tipiche imbarcazioni veneziane che viaggiavano lungo il canale Piovego verso la Laguna di Venezia.\nImmagina questo luogo nel '700: un andirivieni di barcaioli, nobili in viaggio, mercanti lungo gli argini.",
-    challenge_type: "AUDIO",
+    challenge_type: "CACCIA",
     challenge_text:
-      "🎧 Esperienza sensoriale sonora. Mettiti comodo sui gradini della scalinata che scende verso l'acqua, indossa le cuffie, chiudi gli occhi e lasciati trasportare dalla traccia audio nel Settecento del porto padovano.",
-    expected_answer_or_validation: "Ascolto completato",
-    audio_narration:
-      "Chiudi gli occhi. Sei seduto sui gradini di pietra d'Istria di Porta Portello, nel 1750. Ascolta. Lo sciabordio lento dell'acqua del canale Piovego contro gli scalini. Il cigolio dei remi di un Burchiello che si prepara a partire per Venezia. Le voci dei barcaioli che caricano casse di stoffe e vino. Una risata di nobili in viaggio, il rintocco lontano di una campana. Respira l'aria umida del fiume. Sei nel cuore pulsante del porto di Padova. Quando sei pronto, apri gli occhi e conferma l'ascolto.",
-    hints: [
-      "Cerca la scalinata di pietra bianca che scende verso il canale Piovego, proprio accanto all'arco della porta.",
-      "Se l'audio non parte, alza il volume e controlla la connessione: se proprio non va, potrai leggere il racconto e confermare.",
+      "🔍 Caccia al dettaglio. Porta Portello nasconde particolari che quasi nessuno nota. Trova dal vivo i tre dettagli che ti indica Galileo e scrivi la risposta: si parte dal ponte sul canale.",
+    expected_answer_or_validation: "Caccia completata",
+    hunt: [
+      {
+        clue: "🕰️ Dal ponte alza lo sguardo alla torretta. L'orologio ha due giri di numeri: romani per le ore e arabi per i minuti. Qual è il numero arabo più alto?",
+        answers: ["60", "SESSANTA"],
+        hint: "Segui i numeri arabi sul bordo esterno, di cinque in cinque: l'ultimo sta proprio in cima, accanto al XII.",
+        found: "Esatto, 60! Un quadrante con i minuti scritti per esteso: io ho passato la vita a misurare il tempo con i pendoli, questo orologio lo approvo. ⏱️",
+      },
+      {
+        clue: "🔤 Sopra l'arco, due parole latine incise danno alla porta il suo nome ufficiale. Scrivi la prima.",
+        answers: ["OMNIVM", "OMNIUM"],
+        hint: "Le lettere sono tutte maiuscole. Occhio: i Romani scrivevano la U come una V.",
+        found: "OMNIVM SANCTORVM, cioè \"di Ognissanti\": il nome ufficiale è Porta Ognissanti. Portello, il \"porticciolo\", è il nome che le ha dato il porto sul Piovego.",
+      },
+      {
+        clue: "🚶 Ora attraversa l'arco ed entra in città: sei sul lato sud. Voltati verso la porta. Dal lato dell'acqua c'era una cosa che sul lato sud manca: che cosa?",
+        answers: ["OROLOGIO", "QUADRANTE"],
+        hint: "Alza lo sguardo alla torretta: da qui vedi la campana, ma non puoi sapere che ore sono.",
+        found: "Proprio così: l'orologio guarda solo verso il canale, verso chi arrivava in barca. Già che sei qui, osserva i due fregi ai lati dell'arco: in quello di destra due faccine ti fanno la smorfia dall'alto. 😄",
+      },
     ],
+    hints: [],
     reward_xp: 100,
+    galileo_tip: {
+      text: "D'estate su queste gradinate arriva il River Film Festival, con lo schermo che galleggia sull'acqua. Un cinema sul canale: nemmeno con il mio cannocchiale avrei visto tanto lontano! 🎬",
+      links: [{ label: "River Film Festival", url: "https://riverfilmfestival.org/" }],
+    },
     recommended_activity:
       "🎬 In estate le storiche gradinate di Porta Portello ospitano il River Film Festival, con uno schermo galleggiante sull'acqua. https://riverfilmfestival.org/",
   },
   {
     id: 5,
     name: "Parco Milcovich",
-    latitude: 45.41899,
-    longitude: 11.88846,
+    latitude: 45.419661,
+    longitude: 11.890733,
     geofence_radius_m: 200,
     bot_context:
       "Benvenuto al Parco Milcovich! Quasi 40.000 m² di verde, vero cuore dell'Arcella.\nUn tempo qui c'erano solo campi e fabbriche, oggi è un punto di ritrovo vivo per il quartiere, con orti condivisi, aree per lo sport e tantissimi alberi. Oltre a essere un posto perfetto per rilassarsi lontano dalla folla del centro, il parco gioca un ruolo fondamentale per rendere la città più fresca e sostenibile.",
@@ -144,8 +195,12 @@ export const POIS: Poi[] = [
       "Pensa a quanto scotta l'asfalto in agosto: la differenza con l'ombra degli alberi è di parecchi gradi, non di uno o due.",
     ],
     reward_xp: 100,
+    galileo_tip: {
+      text: "Nella bella stagione questo parco si accende con Arcella Bella: musica dal vivo, cinema all'aperto, street food e mercatini. Se passi di sera, salutami le stelle! ✨",
+      links: [{ label: "Arcella Bella", url: "https://www.arcellabella.com/" }],
+    },
     recommended_activity:
-      "🎨 Durante la bella stagione il parco si anima con Arcella Bella: musica dal vivo, cinema all'aperto, street food e mercatini. https://www.arcellabella.it/",
+      "🎨 Durante la bella stagione il parco si anima con Arcella Bella: musica dal vivo, cinema all'aperto, street food e mercatini. https://www.arcellabella.com/",
   },
 ];
 
@@ -242,6 +297,18 @@ export function haversineMeters(
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(a));
 }
+// Quanti metri mancano per entrare nell'area di una tappa (0 se si è già dentro): il bordo
+// del rettangolo per le tappe che lo hanno, altrimenti il bordo del cerchio.
+export function distanceToArea(poi: Poi, lat: number, lng: number): number {
+  if (poi.geofence_box) {
+    const [[a1, b1], [a2, b2]] = poi.geofence_box;
+    const clampedLat = Math.min(Math.max(lat, Math.min(a1, a2)), Math.max(a1, a2));
+    const clampedLng = Math.min(Math.max(lng, Math.min(b1, b2)), Math.max(b1, b2));
+    return haversineMeters(lat, lng, clampedLat, clampedLng);
+  }
+  return Math.max(0, haversineMeters(lat, lng, poi.latitude, poi.longitude) - poi.geofence_radius_m);
+}
+
 // Oltre questa distanza dalla tappa più vicina l'utente non è ancora a Padova e la
 // missione non viene consigliata.
 const FAR_FROM_PADOVA_M = 15_000;
@@ -292,4 +359,25 @@ export function atPoi(poi: Poi): string {
 export function formatDistance(m: number): string {
   if (m < 1000) return `${Math.max(10, Math.round(m / 10) * 10)} m`;
   return `${(m / 1000).toLocaleString("it-IT", { maximumFractionDigits: 1 })} km`;
+}
+
+export type NextPoi = { poi: Poi; distance: number; mission: Mission | null };
+
+// Dopo una tappa completata: la più vicina tra quelle ancora da fare della stessa
+// missione, altrimenti la più vicina tra tutte le altre. Null se le ha fatte tutte.
+export function nextPoiAfter(current: Poi, visited: number[]): NextPoi | null {
+  const done = new Set([...visited, current.id]);
+  const nearest = (ids: number[]) =>
+    POIS.filter((p) => ids.includes(p.id) && !done.has(p.id))
+      .map((p) => ({
+        poi: p,
+        distance: haversineMeters(current.latitude, current.longitude, p.latitude, p.longitude),
+      }))
+      .sort((a, b) => a.distance - b.distance)[0];
+  for (const m of missionsForPoi(current.id)) {
+    const n = nearest(m.poiIds);
+    if (n) return { ...n, mission: m };
+  }
+  const n = nearest(POIS.map((p) => p.id));
+  return n ? { ...n, mission: null } : null;
 }

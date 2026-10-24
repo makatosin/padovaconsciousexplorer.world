@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Circle, useMap } from "react-leaflet";
+import { useEffect, useMemo, useRef, type MutableRefObject } from "react";
+import { MapContainer, TileLayer, Marker, Circle, Rectangle, useMap } from "react-leaflet";
 import L from "leaflet";
 import { POIS } from "@/lib/pois";
 
@@ -29,11 +29,21 @@ const userIcon = L.divIcon({
 });
 
 
-function Recenter({ center }: { center: [number, number] | null }) {
+// Centra la mappa sulla posizione solo quando lo chiede l'app (primo segnale GPS o pulsante
+// della posizione), non a ogni aggiornamento: così lo zoom scelto dall'utente resta com'è.
+function Recenter({
+  target,
+  trigger,
+}: {
+  target: MutableRefObject<[number, number] | null>;
+  trigger: number;
+}) {
   const map = useMap();
   useEffect(() => {
-    if (center) map.flyTo(center, 16, { duration: 0.8 });
-  }, [center, map]);
+    if (trigger > 0 && target.current) {
+      map.flyTo(target.current, Math.max(map.getZoom(), 16), { duration: 0.8 });
+    }
+  }, [trigger, map, target]);
   return null;
 }
 
@@ -69,18 +79,19 @@ export function MapView({
       {POIS.map((poi) => {
         const isVisited = visited.includes(poi.id);
         const inMission = highlight.includes(poi.id);
+        const area = {
+          color: isVisited ? "#16a34a" : "oklch(0.62 0.14 45)",
+          fillOpacity: isVisited ? 0.3 : inMission ? 0.25 : 0.12,
+          weight: inMission ? 4 : 2,
+          dashArray: inMission && !isVisited ? "6 6" : undefined,
+        };
         return (
           <div key={poi.id}>
-            <Circle
-              center={[poi.latitude, poi.longitude]}
-              radius={poi.geofence_radius_m}
-              pathOptions={{
-                color: isVisited ? "#16a34a" : "oklch(0.62 0.14 45)",
-                fillOpacity: isVisited ? 0.3 : inMission ? 0.25 : 0.12,
-                weight: inMission ? 4 : 2,
-                dashArray: inMission && !isVisited ? "6 6" : undefined,
-              }}
-            />
+            {poi.geofence_box ? (
+              <Rectangle bounds={poi.geofence_box} pathOptions={area} />
+            ) : (
+              <Circle center={[poi.latitude, poi.longitude]} radius={poi.geofence_radius_m} pathOptions={area} />
+            )}
             <Marker
               position={[poi.latitude, poi.longitude]}
               {...(isVisited ? { icon: visitedIcon } : {})}
@@ -90,7 +101,7 @@ export function MapView({
         );
       })}
       {userPos && <Marker position={[userPos.lat, userPos.lng]} icon={userIcon} />}
-      <Recenter center={userPos ? [userPos.lat, userPos.lng] : null} key={recenterKey} />
+      <Recenter target={flyTarget} trigger={recenterKey} />
     </MapContainer>
   );
 }

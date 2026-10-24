@@ -138,6 +138,12 @@
     border-color: var(--color-border);
   }
 
+  /* Chrome su Android ingrandisce da solo alcuni testi ("font boosting"): lo si evita. */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
