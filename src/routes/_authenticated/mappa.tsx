@@ -21,6 +21,7 @@ import { MissionPickerDialog, useMissionPicker } from "@/components/game/Mission
 import { HuntChallenge } from "@/components/game/HuntChallenge";
 import { LegendFold } from "@/components/game/LegendFold";
 import { HomeScreenTip } from "@/components/game/HomeScreenTip";
+import { LocationBlockedTip } from "@/components/game/LocationBlockedTip";
 import { nextPoiAfter } from "@/lib/pois";
 import { setStartingMission } from "@/lib/progress.functions";
 import portaPortelloAudio from "@/assets/porta-portello.wav.asset.json";
@@ -360,6 +361,8 @@ function MapPage() {
           </LegendFold>
         </Card>
       </aside>
+
+      {gpsDenied && <LocationBlockedTip className="absolute bottom-4 left-3 right-20 z-[550]" />}
 
       {/* Locate FAB */}
       <button
