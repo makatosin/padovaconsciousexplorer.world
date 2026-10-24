@@ -16,11 +16,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Toaster } from "@/components/ui/sonner";
-import { Trophy, MapPin, CheckCircle2, Circle, RotateCcw, Pencil, Check, X, Loader2, ChevronDown } from "lucide-react";
+import { Trophy, MapPin, CheckCircle2, Circle, Pencil, Check, X, Loader2, ChevronDown } from "lucide-react";
 import { LogIn } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { POIS, BADGES, MISSIONS } from "@/lib/pois";
-import { useActiveProgress as useProgress, useDemoMode } from "@/lib/demo-mode";
+import { useActiveProgress as useProgress } from "@/lib/game-progress";
 import { getMyProfile, updateMyProfile, checkNicknameAvailable } from "@/lib/progress.functions";
 import { AVATARS, getAvatar } from "@/lib/avatars";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,18 +33,13 @@ export const Route = createFileRoute("/_authenticated/profilo")({
 });
 
 function ProfilePage() {
-  const { progress, reset } = useProgress();
-  const { demoActive } = useDemoMode();
+  const { progress } = useProgress();
   const qc = useQueryClient();
   const getProfileFn = useServerFn(getMyProfile);
   const updateProfileFn = useServerFn(updateMyProfile);
   const checkNicknameFn = useServerFn(checkNicknameAvailable);
-  const [hasSession, setHasSession] = useState<boolean | null>(demoActive ? true : null);
+  const [hasSession, setHasSession] = useState<boolean | null>(null);
   useEffect(() => {
-    if (demoActive) {
-      setHasSession(true);
-      return;
-    }
     let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
       if (!cancelled) setHasSession(!!data.session);
@@ -56,7 +51,7 @@ function ProfilePage() {
       cancelled = true;
       sub.subscription.unsubscribe();
     };
-  }, [demoActive]);
+  }, []);
   const profileQ = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
@@ -66,7 +61,7 @@ function ProfilePage() {
       }
       return getProfileFn();
     },
-    enabled: !demoActive && hasSession === true,
+    enabled: hasSession === true,
   });
 
   const [badgesOpen, setBadgesOpen] = useState(false);
@@ -146,20 +141,11 @@ function ProfilePage() {
   const remaining = POIS.filter((p) => !progress.visited_places.includes(p.id));
   const earnedCount = BADGES.filter((b) => progress.badges_earned.includes(b.id)).length;
 
-  const handleReset = async () => {
-    if (!confirm("Azzerare tutti i progressi?")) return;
-    try {
-      await reset();
-      toast.success("Progressi azzerati");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Errore");
-    }
-  };
 
   return (
     <div className="h-full overflow-y-auto pb-4">
       <Toaster position="top-center" richColors />
-      {!demoActive && hasSession === false && (
+      {hasSession === false && (
         <div className="flex h-full flex-col items-center justify-center gap-4 px-6 py-12 text-center">
           <div className="flex size-16 items-center justify-center rounded-full bg-primary/10 text-3xl">
             🔒
@@ -177,7 +163,7 @@ function ProfilePage() {
           </Button>
         </div>
       )}
-      {(demoActive || hasSession === true) && (
+      {hasSession === true && (
       <>
 
       {/* Header */}
@@ -205,7 +191,6 @@ function ProfilePage() {
                   {profileQ.data?.email ?? ""}
                 </p>
               </div>
-              {!demoActive && (
               <Dialog open={editOpen} onOpenChange={setEditOpen}>
                 <DialogTrigger asChild>
                   <Button
@@ -310,7 +295,6 @@ function ProfilePage() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-              )}
             </div>
           );
         })()}
@@ -486,20 +470,8 @@ function ProfilePage() {
         )}
       </section>
 
-      {demoActive && (
-        <div className="px-4 pt-2">
-          <Button
-            onClick={handleReset}
-            variant="outline"
-            size="sm"
-            className="w-full text-muted-foreground"
-          >
-            <RotateCcw className="mr-2 size-3.5" /> Azzera progressi (demo)
-          </Button>
-        </div>
-      )}
       <p className="px-4 pt-4 pb-2 text-center text-[10px] text-muted-foreground">
-        Versione 1.10 · 24/10/2026
+        Versione 1.11 · 24/10/2026
       </p>
       </>
       )}
