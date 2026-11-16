@@ -30,7 +30,10 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_0cA891an7EwlvuBOcTEkvA_YSMEr2zw
       # GitHub Pages non conosce le rotte dell'app (/auth, /mappa, ...):
       # 404.html = index.html fa aprire comunque l'app su qualsiasi indirizzo.
-      - run: cp dist/client/index.html dist/client/404.html
+      # Le pagine principali rispondono "200 OK" (serve a LinkedIn & co. per l'anteprima).
+      - run: |
+          cp dist/client/index.html dist/client/404.html
+          for page in auth mappa profilo; do cp dist/client/index.html dist/client/$page.html; done
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist/client
