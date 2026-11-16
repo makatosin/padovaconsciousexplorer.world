@@ -1,27 +1,12 @@
-import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
 import { POIS } from "./pois";
 
-
+// Validazione lato client: le soluzioni sono già incluse nell'app (pois.ts),
+// quindi non serve un server e l'app funziona anche come sito statico.
 async function assertAuthorized(): Promise<void> {
-  const authHeader = getRequestHeader("authorization");
-  if (authHeader?.startsWith("Bearer ")) {
-    const token = authHeader.slice(7);
-    if (token && token.split(".").length === 3) {
-      const url = process.env.SUPABASE_URL;
-      const key = process.env.SUPABASE_PUBLISHABLE_KEY;
-      if (url && key) {
-        try {
-          const res = await fetch(`${url}/auth/v1/user`, {
-            headers: { apikey: key, Authorization: `Bearer ${token}` },
-          });
-          if (res.ok) return;
-        } catch {}
-      }
-    }
-  }
-  throw new Error("Unauthorized");
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) throw new Error("Unauthorized");
 }
 
 const ValidateTriviaInput = z.object({
@@ -29,9 +14,8 @@ const ValidateTriviaInput = z.object({
   answer: z.string().min(1).max(500),
 });
 
-export const validateTrivia = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => ValidateTriviaInput.parse(data))
-  .handler(async ({ data }) => {
+export async function validateTrivia(opts: { data: unknown }) {
+    const data = ValidateTriviaInput.parse(opts.data);
     await assertAuthorized();
     const poi = POIS.find((p) => p.id === data.poiId);
     if (!poi || poi.challenge_type !== "TRIVIA") {
@@ -63,7 +47,7 @@ export const validateTrivia = createServerFn({ method: "POST" })
         : "Non è ancora la frase giusta. Rileggi bene l'iscrizione e riprova!",
       reward_xp: poi.reward_xp,
     };
-  });
+}
 
 function normalizeAnswer(text: string): string {
   return text

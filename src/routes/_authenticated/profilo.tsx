@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Progress as ProgressBar } from "@/components/ui/progress";
@@ -35,9 +34,9 @@ export const Route = createFileRoute("/_authenticated/profilo")({
 function ProfilePage() {
   const { progress } = useProgress();
   const qc = useQueryClient();
-  const getProfileFn = useServerFn(getMyProfile);
-  const updateProfileFn = useServerFn(updateMyProfile);
-  const checkNicknameFn = useServerFn(checkNicknameAvailable);
+  const getProfileFn = getMyProfile;
+  const updateProfileFn = updateMyProfile;
+  const checkNicknameFn = checkNicknameAvailable;
   const [hasSession, setHasSession] = useState<boolean | null>(null);
   useEffect(() => {
     let cancelled = false;

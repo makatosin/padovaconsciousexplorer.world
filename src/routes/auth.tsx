@@ -96,7 +96,7 @@ function AuthPage() {
           email: parsed.data.email,
           password: parsed.data.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/mappa`,
+            emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}mappa`,
             data: {
               display_name: parsed.data.nickname,
               nickname: parsed.data.nickname,
@@ -134,7 +134,7 @@ function AuthPage() {
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center text-center">
           <img
-            src="/art/logo.svg"
+            src={`${import.meta.env.BASE_URL}art/logo.svg`}
             alt="Logo di Padova Conscious Explorer"
             className="mb-3 size-24 drop-shadow-xl"
           />

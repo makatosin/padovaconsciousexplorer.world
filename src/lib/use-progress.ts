@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import {
   getProgress,
@@ -29,9 +28,9 @@ function toClient(row: ProgressRow): Progress {
 
 export function useProgress(options?: { enabled?: boolean }) {
   const qc = useQueryClient();
-  const getFn = useServerFn(getProgress);
-  const completeFn = useServerFn(completePoiProgress);
-  const resetFn = useServerFn(resetProgress);
+  const getFn = getProgress;
+  const completeFn = completePoiProgress;
+  const resetFn = resetProgress;
 
   const query = useQuery({
     queryKey: ["progress"],

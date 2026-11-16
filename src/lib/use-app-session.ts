@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { pingAppSession, startAppSession } from "./progress.functions";
 
@@ -9,8 +8,8 @@ const PING_EVERY_MS = 60_000;
 // primo piano e viene aggiornata ogni minuto. Quando l'app va in background il conteggio
 // si ferma; al ritorno parte una nuova sessione, così il tempo fuori dall'app non conta.
 export function useAppSession(enabled: boolean) {
-  const startFn = useServerFn(startAppSession);
-  const pingFn = useServerFn(pingAppSession);
+  const startFn = startAppSession;
+  const pingFn = pingAppSession;
 
   useEffect(() => {
     if (!enabled) return;

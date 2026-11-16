@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ClientOnly } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
@@ -62,7 +61,7 @@ function MapPage() {
   const [mentorOpen, setMentorOpen] = useState(false);
   const about = useAboutDialog();
   const missionPicker = useMissionPicker(about.open);
-  const setMissionFn = useServerFn(setStartingMission);
+  const setMissionFn = setStartingMission;
   const activeMission = MISSIONS.find((m) => m.id === missionPicker.missionId) ?? null;
   const firstFixRef = useRef(true);
   const notifiedRef = useRef<Set<number>>(new Set());
@@ -180,7 +179,7 @@ function MapPage() {
         ) {
           new Notification(`Eccoti ${atPoi(poi)}!`, {
             body: "Apri Padova Conscious Explorer: la sfida è sbloccata.",
-            icon: "/icon-192.png",
+            icon: `${import.meta.env.BASE_URL}icon-192.png`,
             tag: `poi-${poi.id}`,
           });
         }
@@ -555,7 +554,7 @@ function ChallengePanel({
   inRange: boolean;
   onSuccess: () => void;
 }) {
-  const triviaFn = useServerFn(validateTrivia);
+  const triviaFn = validateTrivia;
   const [answer, setAnswer] = useState("");
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);

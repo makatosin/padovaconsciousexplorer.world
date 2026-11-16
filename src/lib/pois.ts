@@ -221,7 +221,7 @@ export type Mission = {
 export const MISSIONS: Mission[] = [
   {
     id: "acqua",
-    badgeArt: "/art/badge-acqua.svg",
+    badgeArt: `${import.meta.env.BASE_URL}art/badge-acqua.svg`,
     badgeTitle: "Custode dell'Acqua",
     title: "Padova d'acqua",
     emoji: "💧",
@@ -233,7 +233,7 @@ export const MISSIONS: Mission[] = [
   },
   {
     id: "mura",
-    badgeArt: "/art/badge-mura.svg",
+    badgeArt: `${import.meta.env.BASE_URL}art/badge-mura.svg`,
     badgeTitle: "Sentinella delle Mura",
     title: "Padova fortificata",
     emoji: "🏰",
@@ -245,7 +245,7 @@ export const MISSIONS: Mission[] = [
   },
   {
     id: "verde",
-    badgeArt: "/art/badge-verde.svg",
+    badgeArt: `${import.meta.env.BASE_URL}art/badge-verde.svg`,
     badgeTitle: "Anima Verde",
     title: "Padova verde",
     emoji: "🌳",
@@ -277,7 +277,7 @@ export const BADGES: Badge[] = [
     id: FINAL_BADGE_ID,
     title: "Esploratore Consapevole",
     description: "Completa tutte e tre le missioni e visita tutti e cinque i luoghi.",
-    art: "/art/badge-finale.svg",
+    art: `${import.meta.env.BASE_URL}art/badge-finale.svg`,
     unlock: (v) => MISSIONS.every((m) => m.poiIds.every((id) => v.includes(id))),
   },
 ];
