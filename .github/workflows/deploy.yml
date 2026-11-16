@@ -25,7 +25,8 @@ jobs:
         env:
           GITHUB_PAGES_BASE: /${{ github.event.repository.name }}/
           VITE_SUPABASE_URL: https://rnsgnhtswfxjjjmbinai.supabase.co
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          # Chiave pubblica (publishable): è fatta per stare nel browser, i dati sono protetti da RLS
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_0cA891an7EwlvuBOcTEkvA_YSMEr2zw
       # GitHub Pages non conosce le rotte dell'app (/auth, /mappa, ...):
       # 404.html = index.html fa aprire comunque l'app su qualsiasi indirizzo.
       - run: cp dist/client/index.html dist/client/404.html
