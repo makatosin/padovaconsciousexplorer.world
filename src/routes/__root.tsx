@@ -74,6 +74,13 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   );
 }
 
+// Indirizzo pubblico del sito (impostato dal workflow di GitHub Pages): serve per
+// l'anteprima dei link su LinkedIn, WhatsApp ecc., che vuole URL assoluti.
+const SITE_URL: string | undefined = import.meta.env.VITE_SITE_URL;
+const OG_IMAGE = SITE_URL
+  ? `${SITE_URL}og-image.png`
+  : "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/0fd09f36-b2c1-4e12-a107-40f310b23b12";
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
@@ -100,8 +107,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "Padova Conscious Explorer" },
       { name: "twitter:description", content: "Gamification per il turismo sostenibile: esplora Padova, sblocca luoghi nascosti e colleziona badge." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/0fd09f36-b2c1-4e12-a107-40f310b23b12" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/0fd09f36-b2c1-4e12-a107-40f310b23b12" },
+      ...(SITE_URL
+        ? [
+            { property: "og:url", content: SITE_URL },
+            { property: "og:site_name", content: "Padova Conscious Explorer" },
+            { property: "og:locale", content: "it_IT" },
+            { property: "og:image:width", content: "1200" },
+            { property: "og:image:height", content: "627" },
+          ]
+        : []),
+      { property: "og:image", content: OG_IMAGE },
+      { name: "twitter:image", content: OG_IMAGE },
     ],
     links: [
       {
